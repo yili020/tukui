@@ -3,91 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品展示</title>
-    <!-- 微信分享所需的meta标签 -->
-    <meta itemprop="name" content="签到有礼">
-    <meta itemprop="description" content="每日签到领取奖励">
-    <meta itemprop="image" content="https://tukui.ylweiqu.cn/images/share.jpg">
-    <!-- 通用社交分享meta标签 -->
-    <meta property="og:title" content="签到有礼">
-    <meta property="og:description" content="每日签到领取奖励">
-    <meta property="og:image" content="https://tukui.ylweiqu.cn/images/share.jpg">
-    <meta property="og:url" content="https://tukui.ylweiqu.cn">
-    <!-- 额外添加微信分享专用标签 -->
-    <meta name="weixin:timeline_title" content="签到有礼">
-    <meta name="weixin:chat_title" content="签到有礼">
-    <meta name="weixin:description" content="每日签到领取奖励">
-    <meta name="weixin:image" content="https://tukui.ylweiqu.cn/images/share.jpg">
-    <!-- 添加微信分享的额外标签 -->
-    <meta name="description" content="查看我们的精选商品">
-    <meta name="keywords" content="商品,优惠,抢购">
-    
-    <!-- 添加微信分享缩略图专用标签 -->
-    <meta name="thumbnail" content="https://tukui.ylweiqu.cn/images/share.jpg">
-    <link rel="image_src" href="https://tukui.ylweiqu.cn/images/share.jpg">
-    
+    <!-- 添加微信分享相关的meta标签 -->
+    <meta property="og:title" content="产品图库">
+    <meta property="og:description" content="精选商品，欢迎选购！">
+    <meta property="og:image" content="images/share.jpg">
+    <title>产品图库</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>签到有礼</h1>
+    <header>
+        <h1>产品图库</h1>
+        <nav>
+            <ul class="category-list">
+                <li><a href="#" class="active" data-category="all">全部</a></li>
+                <li><a href="#" data-category="category1">数码产品</a></li>
+                <li><a href="#" data-category="category2">家居用品</a></li>
+                <li><a href="#" data-category="category3">服饰鞋包</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
         <div class="product-grid">
-            <div class="product-card">
-                <img src="./images/product1.jpg" alt="签到奖励1">
-                <h2>连续签到3天</h2>
-                <p>可获得精美礼品一份</p>
+            <div class="product" data-category="category1">
+                <img src="images/product1.jpg" alt="商品1">
+                <h3 class="product-title">商品1</h3>
+                <p class="product-price">¥199</p>
+                <div class="product" data-category="category1">
             </div>
-            <div class="product-card">
-                <img src="./images/product2.jpg" alt="签到奖励2">
-                <h2>连续签到7天</h2>
-                <p>可获得超值大礼包</p>
+            <div class="product" data-category="category2"></div>
+                <img src="images/product2.jpg" alt="商品2">
+                <h3 class="product-title">商品2</h3>
+                <p class="product-price">¥199</p>
+                <div class="product" data-category="category2">
             </div>
-            <div class="product-card">
-                <img src="./images/product3.jpg" alt="签到奖励3">
-                <h2>连续签到30天</h2>
-                <p>可获得限量特制礼品</p>
+            <!-- 为了演示效果，添加更多商品 -->
+            <div class="product" data-category="category4">
+                <img src="images/product3.jpg" alt="商品4">
+                <h3 class="product-title">商品4</h3>
+                <p class="product-price">¥299</p>
             </div>
         </div>
-    </div>
-
+    </main>
     <!-- 引入微信JSSDK -->
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
-    <script>
-        // 配置微信JSSDK
-        wx.config({
-            debug: false, // 开发时可以设为true，上线时设为false
-            appId: '你的微信appId', // 必填，公众号的唯一标识
-            timestamp: '', // 必填，生成签名的时间戳
-            nonceStr: '', // 必填，生成签名的随机串
-            signature: '',// 必填，签名
-            jsApiList: [ // 必填，需要使用的JS接口列表
-                'updateAppMessageShareData', // 分享给朋友
-                'updateTimelineShareData'  // 分享到朋友圈
-            ]
-        });
-
-        wx.ready(function () {
-            // 分享给朋友
-            wx.updateAppMessageShareData({ 
-                title: '签到有礼', // 更新分享标题
-                desc: '每日签到领取奖励', // 更新分享描述
-                link: 'https://tukui.ylweiqu.cn', // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                imgUrl: 'https://tukui.ylweiqu.cn/images/share.jpg', // 分享图标
-                success: function () {
-                    // 设置成功
-                }
-            });
-            
-            // 分享到朋友圈
-            wx.updateTimelineShareData({ 
-                title: '签到有礼', // 更新分享标题
-                link: 'https://tukui.ylweiqu.cn', // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                imgUrl: 'https://tukui.ylweiqu.cn/images/share.jpg', // 分享图标
-                success: function () {
-                    // 设置成功
-                }
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
