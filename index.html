@@ -3,20 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 微信分享相关meta标签 -->
-    <meta property="og:title" content="商品名称">
-    <meta property="og:description" content="商品描述信息">
+    <title>商品展示</title>
+    <!-- 微信分享所需的meta标签 -->
+    <meta itemprop="name" content="商品展示">
+    <meta itemprop="description" content="查看我们的精选商品">
+    <meta itemprop="image" content="https://tukui.ylweiqu.cn/images/share.jpg">
+    <!-- 通用社交分享meta标签 -->
+    <meta property="og:title" content="商品展示">
+    <meta property="og:description" content="查看我们的精选商品">
     <meta property="og:image" content="https://tukui.ylweiqu.cn/images/share.jpg">
     <meta property="og:url" content="https://tukui.ylweiqu.cn">
-    <title>商品展示</title>
+    <!-- 额外添加微信分享专用标签 -->
+    <meta name="weixin:timeline_title" content="商品展示">
+    <meta name="weixin:chat_title" content="商品展示">
+    <meta name="weixin:description" content="查看我们的精选商品">
+    <meta name="weixin:image" content="https://tukui.ylweiqu.cn/images/share.jpg">
+    <!-- 添加微信分享的额外标签 -->
+    <meta name="description" content="查看我们的精选商品">
+    <meta name="keywords" content="商品,优惠,抢购">
+    
+    <!-- 添加微信分享缩略图专用标签 -->
+    <meta name="thumbnail" content="https://tukui.ylweiqu.cn/images/share.jpg">
+    <link rel="image_src" href="https://tukui.ylweiqu.cn/images/share.jpg">
+    
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="product-card">
-        <img src="product-image.jpg" alt="商品图片" class="product-image">
-        <h1 class="product-title">商品名称</h1>
-        <p class="product-description">商品描述信息</p>
-        <div class="product-price">¥ 199.00</div>
+    <div class="container">
+        <h1>商品展示</h1>
+        <div class="product-grid">
+            <div class="product-card">
+                <img src="path/to/product1.jpg" alt="商品1">
+                <h2>商品名称1</h2>
+                <p>商品描述1</p>
+            </div>
+            <div class="product-card">
+                <img src="path/to/product2.jpg" alt="商品2">
+                <h2>商品名称2</h2>
+                <p>商品描述2</p>
+            </div>
+            <!-- 可以继续添加更多商品卡片 -->
+        </div>
     </div>
 </body>
-</html> 
+</html>
