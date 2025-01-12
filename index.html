@@ -25,13 +25,24 @@
     <main>
         <div class="product-grid">
             <div class="product" data-category="category1">
-                <img src="images/product1.jpg" alt="商品1">
+                <div class="product-image">
+                    <img src="images/product1.jpg" 
+                         srcset="images/product1.jpg 600w"
+                         sizes="(max-width: 768px) 100vw, 50vw"
+                         alt="商品1" 
+                         onerror="this.onerror=null;this.src='images/share.jpg';">
+                </div>
                 <h3 class="product-title">商品1</h3>
                 <p class="product-price">¥199</p>
             </div>
-            <!-- 为了演示效果，添加更多商品 -->
             <div class="product" data-category="category2">
-                <img src="images/product2.jpg" alt="商品2">
+                <div class="product-image">
+                    <img src="images/product2.jpg"
+                         srcset="images/product2.jpg 600w"
+                         sizes="(max-width: 768px) 100vw, 50vw"
+                         alt="商品2"
+                         onerror="this.onerror=null;this.src='images/share.jpg';">
+                </div>
                 <h3 class="product-title">商品2</h3>
                 <p class="product-price">¥299</p>
             </div>
