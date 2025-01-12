@@ -88,7 +88,7 @@ h1 {
     font-weight: bold;
 }
 
-.product-image {
+.product {
     position: relative;
     width: 100%;
     padding-bottom: 100%; /* 创建1:1的宽高比 */
@@ -97,7 +97,7 @@ h1 {
     background-color: #f8f8f8; /* 图片加载前的背景色 */
 }
 
-.product-image img {
+.product img {
     position: absolute;
     top: 0;
     left: 0;
@@ -107,7 +107,7 @@ h1 {
     transition: transform 0.3s ease;
 }
 
-.product:hover .product-image img {
+.product:hover .product img {
     transform: scale(1.05);
 }
 
@@ -127,11 +127,11 @@ h1 {
         font-size: 14px;
     }
     
-    .product-image {
+    .product {
         padding-bottom: 75%; /* 移动端可以使用不同的宽高比 */
     }
     
-    .product-image img {
+    .product img {
         object-fit: contain; /* 移动端确保图片完整显示 */
     }
     
@@ -151,7 +151,7 @@ h1 {
     100% { opacity: 1; }
 }
 
-.product-image img {
+.product img {
     animation: imageLoading 0.3s ease-in;
 }
 
@@ -174,12 +174,12 @@ h1 {
 }
 
 /* 图片加载完成后隐藏骨架屏 */
-.product-image img[src] {
+.product img[src] {
     z-index: 1;
     position: relative;
 }
 
-.product-image img[src] + ::before {
+.product img[src] + ::before {
     display: none;
 }
 
