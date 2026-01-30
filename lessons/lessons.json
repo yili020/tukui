@@ -1,0 +1,38 @@
+{
+    "course": {
+      "id": "html-basics",
+      "title": "HTML基础教程",
+      "description": "学习HTML基础知识",
+      "steps": [
+        {
+          "id": 1,
+          "title": "HTML文档结构",
+          "type": "learn",
+          "explanation": "HTML文档由<html>、<head>和<body>标签组成",
+          "exampleCode": "<!DOCTYPE html>\n<html>\n<head>\n    <title>我的网页</title>\n</head>\n<body>\n    <h1>欢迎学习HTML</h1>\n    <p>这是第一个段落。</p>\n</body>\n</html>",
+          "hint": "注意标签的嵌套关系"
+        },
+        {
+          "id": 2,
+          "title": "创建你的第一个HTML页面",
+          "type": "practice",
+          "description": "尝试编写完整的HTML页面",
+          "initialCode": "<!DOCTYPE html>\n<html>\n<head>\n    <!-- 在这里设置页面标题 -->\n</head>\n<body>\n    <!-- 在这里添加内容 -->\n</body>\n</html>",
+          "tasks": [
+            "设置页面标题为'我的练习页面'",
+            "添加一个h1标题",
+            "添加两个段落"
+          ],
+          "hint": "使用<title>标签设置标题，<h1>创建标题，<p>创建段落"
+        },
+        {
+          "id": 3,
+          "title": "HTML链接",
+          "type": "learn",
+          "explanation": "使用<a>标签创建超链接",
+          "exampleCode": "<!DOCTYPE html>\n<html>\n<body>\n    <h1>链接示例</h1>\n    <p>访问 <a href=\"https://www.example.com\">示例网站</a></p>\n    <p><a href=\"#top\">回到顶部</a></p>\n</body>\n</html>",
+          "hint": "href属性指定链接目标"
+        }
+      ]
+    }
+  }

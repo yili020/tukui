@@ -1,0 +1,35 @@
+{
+  "course": {
+    "id": "test-course",
+    "title": "测试课程",
+    "steps": [
+      {
+        "id": 1,
+        "title": "HTML基础测试",
+        "type": "learn",
+        "explanation": "这是一个测试学习步骤，用于验证导入功能是否正常工作。",
+        "exampleCode": "<!DOCTYPE html>\n<html>\n<head>\n    <title>测试页面</title>\n</head>\n<body>\n    <h1>Hello, World!</h1>\n    <p>这是一个测试页面。</p>\n</body>\n</html>"
+      },
+      {
+        "id": 2,
+        "title": "练习测试",
+        "type": "practice",
+        "practiceTitle": "测试练习任务",
+        "initialCode": "<!DOCTYPE html>\n<html>\n<head>\n    <title>我的练习</title>\n</head>\n<body>\n    <!-- 在这里编写代码 -->\n</body>\n</html>",
+        "tasks": [
+          "添加一个h1标题",
+          "添加一个段落",
+          "添加一个链接"
+        ],
+        "hint": "使用h1、p、a标签"
+      },
+      {
+        "id": 3,
+        "title": "CSS基础",
+        "type": "learn",
+        "explanation": "学习如何使用CSS样式。",
+        "exampleCode": "<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f0f0f0;\n        }\n        h1 {\n            color: blue;\n        }\n    </style>\n</head>\n<body>\n    <h1>带样式的标题</h1>\n    <p>这是一个带有样式的段落。</p>\n</body>\n</html>"
+      }
+    ]
+  }
+}

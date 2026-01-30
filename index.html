@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编程学习平台</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <header class="app-header">
+            <h1>编程学习平台</h1>
+            <div class="course-info">
+                <span id="course-title">HTML基础</span>
+                <span id="step-type">学习模式</span>
+                <span id="progress">步骤 1/10</span>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 左侧效果展示区 -->
+            <section class="preview-panel">
+                <div class="panel-header">
+                    <h3 id="preview-title">效果预览</h3>
+                    <div class="preview-controls">
+                        <button id="run-code">运行</button>
+                        <button id="reset-code">重置</button>
+                    </div>
+                </div>
+                <div class="preview-content">
+                    <iframe id="preview-frame"></iframe>
+                    <div id="preview-error" style="display: none; padding: 20px; color: #dc3545;"></div>
+                </div>
+            </section>
+
+            <!-- 右侧代码区 -->
+            <section class="code-panel">
+                <div class="panel-header">
+                    <h3 id="code-title">代码区</h3>
+                </div>
+                <div class="code-content">
+                    <!-- 学习模式界面 -->
+                    <div id="learn-panel" class="content-panel active">
+                        <div class="step-explanation">
+                            <h4 id="learn-title">HTML文档结构</h4>
+                            <p id="learn-description"></p>
+                        </div>
+                        <div class="code-display">
+                            <h5>示例代码</h5>
+                            <pre><code id="example-code" class="language-html"></code></pre>
+                        </div>
+                    </div>
+
+                    <!-- 练习模式界面 -->
+                    <div id="practice-panel" class="content-panel">
+                        <div class="practice-header">
+                            <h4 id="practice-title">练习任务</h4>
+                            <ul id="task-list"></ul>
+                        </div>
+                        <div class="code-editor-container">
+                            <textarea id="code-editor" placeholder="在这里编写你的代码..."></textarea>
+                        </div>
+                        <div class="practice-hint">
+                            <h5>提示</h5>
+                            <p id="hint-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 底部控制栏 -->
+        <footer class="navigation-footer">
+            <button id="prev-step" disabled>上一步</button>
+            <div class="step-info">
+                <span id="step-title-display">HTML文档结构</span>
+                <div class="step-indicator">
+                    <span id="current-step">1</span> / <span id="total-steps">10</span>
+                </div>
+            </div>
+            <button id="next-step">下一步</button>
+            <button id="import-lesson">导入课程</button>
+            <input type="file" id="lesson-file" accept=".json,.txt" style="display: none;">
+            <div id="loading" style="display: none; color: #666;">导入中...</div>
+        </footer>
+    </div>
+
+    <!-- 代码高亮库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+    
+    <!-- 应用脚本 -->
+    <script src="scripts/lesson-manager.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
