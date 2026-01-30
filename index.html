@@ -2,89 +2,211 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>编程学习平台</title>
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- 顶部导航 -->
-        <header class="app-header">
-            <h1>编程学习平台</h1>
-            <div class="course-info">
-                <span id="course-title">HTML基础</span>
-                <span id="step-type">学习模式</span>
-                <span id="progress">步骤 1/10</span>
+    <!-- 顶部导航栏 -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <button id="menu-toggle" class="menu-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1 id="course-title-mobile">编程学习</h1>
             </div>
-        </header>
+            <div class="header-right">
+                <span id="step-type-badge">学习</span>
+            </div>
+        </div>
+        
+        <!-- 步骤进度指示器 -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="current-step-mobile">1</span>/<span id="total-steps-mobile">10</span>
+            </div>
+        </div>
+    </header>
 
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <!-- 左侧效果展示区 -->
-            <section class="preview-panel">
-                <div class="panel-header">
-                    <h3 id="preview-title">效果预览</h3>
-                    <div class="preview-controls">
-                        <button id="run-code">运行</button>
-                        <button id="reset-code">重置</button>
-                    </div>
-                </div>
-                <div class="preview-content">
-                    <iframe id="preview-frame"></iframe>
-                    <div id="preview-error" style="display: none; padding: 20px; color: #dc3545;"></div>
-                </div>
-            </section>
-
-            <!-- 右侧代码区 -->
-            <section class="code-panel">
-                <div class="panel-header">
-                    <h3 id="code-title">代码区</h3>
-                </div>
-                <div class="code-content">
-                    <!-- 学习模式界面 -->
-                    <div id="learn-panel" class="content-panel active">
-                        <div class="step-explanation">
-                            <h4 id="learn-title">HTML文档结构</h4>
-                            <p id="learn-description"></p>
-                        </div>
-                        <div class="code-display">
-                            <h5>示例代码</h5>
-                            <pre><code id="example-code" class="language-html"></code></pre>
-                        </div>
-                    </div>
-
-                    <!-- 练习模式界面 -->
-                    <div id="practice-panel" class="content-panel">
-                        <div class="practice-header">
-                            <h4 id="practice-title">练习任务</h4>
-                            <ul id="task-list"></ul>
-                        </div>
-                        <div class="code-editor-container">
-                            <textarea id="code-editor" placeholder="在这里编写你的代码..."></textarea>
-                        </div>
-                        <div class="practice-hint">
-                            <h5>提示</h5>
-                            <p id="hint-text"></p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 模式切换标签栏 -->
+        <div class="mode-tabs" id="mode-tabs">
+            <button class="tab-btn active" data-mode="preview">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+                </svg>
+                <span>预览</span>
+            </button>
+            <button class="tab-btn" data-mode="code">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z"/>
+                </svg>
+                <span>代码</span>
+            </button>
         </div>
 
-        <!-- 底部控制栏 -->
-        <footer class="navigation-footer">
-            <button id="prev-step" disabled>上一步</button>
-            <div class="step-info">
-                <span id="step-title-display">HTML文档结构</span>
-                <div class="step-indicator">
-                    <span id="current-step">1</span> / <span id="total-steps">10</span>
+        <!-- 效果预览面板（移动端默认显示） -->
+        <section id="preview-panel" class="content-panel active">
+            <div class="panel-header">
+                <h3 id="preview-title-mobile">效果预览</h3>
+                <div class="preview-controls">
+                    <button id="run-code-mobile" class="icon-btn" title="运行">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                        </svg>
+                    </button>
+                    <button id="reset-code-mobile" class="icon-btn" title="重置">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M12,5V1L7,6L12,11V7A6,6 0 0,1 18,13A6,6 0 0,1 12,19A6,6 0 0,1 6,13H4A8,8 0 0,0 12,21A8,8 0 0,0 20,13A8,8 0 0,0 12,5Z"/>
+                        </svg>
+                    </button>
+                    <button id="fullscreen-preview" class="icon-btn" title="全屏">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
-            <button id="next-step">下一步</button>
-            <button id="import-lesson">导入课程</button>
-            <input type="file" id="lesson-file" accept=".json,.txt" style="display: none;">
-            <div id="loading" style="display: none; color: #666;">导入中...</div>
-        </footer>
+            <div class="preview-content-mobile" id="preview-content-mobile">
+                <!-- 移动端预览区域 -->
+            </div>
+        </section>
+
+        <!-- 代码/解释面板 -->
+        <section id="code-panel" class="content-panel">
+            <div class="panel-header">
+                <h3 id="code-title-mobile">代码</h3>
+                <div class="code-controls">
+                    <!-- 学习模式显示复制按钮，练习模式显示清空按钮 -->
+                    <button id="copy-code" class="icon-btn" title="复制代码">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 学习模式内容 -->
+            <div id="learn-panel-mobile" class="mobile-panel">
+                <div class="step-explanation-mobile">
+                    <h4 id="learn-title-mobile">HTML文档结构</h4>
+                    <p id="learn-description-mobile"></p>
+                </div>
+                <div class="code-display-mobile">
+                    <div class="code-header">
+                        <h5>示例代码</h5>
+                        <button id="copy-example" class="small-btn">复制</button>
+                    </div>
+                    <pre><code id="example-code-mobile" class="language-html"></code></pre>
+                </div>
+            </div>
+            
+            <!-- 练习模式内容 -->
+            <div id="practice-panel-mobile" class="mobile-panel" style="display: none;">
+                <div class="practice-instructions-mobile">
+                    <h4 id="practice-title-mobile">练习任务</h4>
+                    <ul id="task-list-mobile"></ul>
+                </div>
+                <div class="code-editor-container-mobile">
+                    <div class="editor-toolbar">
+                        <span>代码编辑器</span>
+                        <button id="clear-editor" class="small-btn">清空</button>
+                    </div>
+                    <textarea id="code-editor-mobile" placeholder="在这里编写你的代码..."></textarea>
+                </div>
+                <div class="practice-hint-mobile">
+                    <div class="hint-header">
+                        <h5>💡 提示</h5>
+                        <button id="toggle-hint" class="small-btn">显示/隐藏</button>
+                    </div>
+                    <p id="hint-text-mobile"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部导航栏 -->
+    <footer class="mobile-footer">
+        <div class="footer-content">
+            <button id="prev-step-mobile" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
+                </svg>
+                <span>上一步</span>
+            </button>
+            
+            <div class="step-info-mobile">
+                <span id="step-title-mobile">HTML文档结构</span>
+                <div class="step-indicator-mobile">
+                    <span id="step-number-mobile">步骤 1</span>
+                </div>
+            </div>
+            
+            <button id="next-step-mobile" class="nav-btn">
+                <span>下一步</span>
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- 额外功能按钮 -->
+        <div class="extra-controls">
+            <button id="import-lesson-mobile" class="extra-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+                </svg>
+                <span>导入</span>
+            </button>
+            <button id="export-code" class="extra-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                </svg>
+                <span>导出</span>
+            </button>
+            <button id="toggle-theme" class="extra-btn">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/>
+                </svg>
+                <span>主题</span>
+            </button>
+        </div>
+        
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="lesson-file-mobile" accept=".json" style="display: none;">
+    </footer>
+
+    <!-- 全屏预览模态框 -->
+    <div id="fullscreen-modal" class="fullscreen-modal">
+        <div class="modal-header">
+            <button id="close-fullscreen" class="close-btn">×</button>
+            <h3>全屏预览</h3>
+        </div>
+        <div class="modal-content" id="fullscreen-content"></div>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div id="mobile-menu" class="mobile-menu">
+        <div class="menu-header">
+            <h3>课程菜单</h3>
+            <button id="close-menu" class="close-btn">×</button>
+        </div>
+        <div class="menu-content">
+            <ul id="step-list">
+                <!-- 步骤列表动态生成 -->
+            </ul>
+            <div class="menu-actions">
+                <button id="reset-progress" class="menu-btn danger">重置进度</button>
+                <button id="export-progress" class="menu-btn">导出进度</button>
+            </div>
+        </div>
     </div>
 
     <!-- 代码高亮库 -->
@@ -93,6 +215,6 @@
     
     <!-- 应用脚本 -->
     <script src="scripts/lesson-manager.js"></script>
-    <script src="scripts/app.js"></script>
+    <script src="scripts/mobile-app.js"></script>
 </body>
 </html>
