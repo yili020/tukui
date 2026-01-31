@@ -153,6 +153,7 @@ body {
     width: 100%;
     height: calc(100vh - 160px);
     overflow: hidden;
+    touch-action: pan-y;
 }
 
 /* 页面样式 */
@@ -165,7 +166,7 @@ body {
     background: white;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease-out;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
@@ -195,6 +196,11 @@ body {
 .page.active {
     transform: translateX(0) !important;
     z-index: 3;
+}
+
+/* 确保所有页面都可以触摸 */
+.page {
+    touch-action: pan-y;
 }
 
 /* 页面头部 */
@@ -585,26 +591,9 @@ body {
     .pages-container {
         height: calc(100vh - 180px);
     }
-    
-    .app-footer {
-        height: 140px;
-    }
 }
 
 @media (min-width: 768px) {
-    body {
-        position: static;
-        overflow: auto;
-    }
-    
-    .app-header {
-        display: none;
-    }
-    
-    .app-footer {
-        display: none;
-    }
-    
     .pages-container {
         display: flex;
         height: 100vh;
