@@ -19,10 +19,10 @@
                 <h1 id="course-title">编程学习</h1>
             </div>
             <div class="header-right">
-                <!-- 滑动指示器 -->
-                <div class="slide-indicator">
-                    <span class="indicator-dot active" data-panel="preview"></span>
-                    <span class="indicator-dot" data-panel="code"></span>
+                <!-- 页面指示器 -->
+                <div class="page-indicator">
+                    <span class="page-dot active" data-page="preview"></span>
+                    <span class="page-dot" data-page="code"></span>
                 </div>
                 <span id="step-type">学习</span>
             </div>
@@ -39,18 +39,18 @@
         </div>
     </header>
 
-    <!-- 主内容区 - 滑动容器 -->
-    <main class="slide-container" id="slide-container">
-        <!-- 预览面板 -->
-        <section class="slide-panel active" id="preview-panel">
-            <div class="panel-header">
-                <h3 class="panel-title">
+    <!-- 主内容区 - 使用两个独立的页面 -->
+    <main class="pages-container">
+        <!-- 页面1：效果预览 -->
+        <div class="page active" id="page-preview">
+            <div class="page-header">
+                <h2>
                     <svg viewBox="0 0 24 24" width="20" height="20">
                         <path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
                     </svg>
                     效果预览
-                </h3>
-                <div class="panel-controls">
+                </h2>
+                <div class="page-controls">
                     <button id="run-code" class="icon-btn" title="运行">
                         <svg viewBox="0 0 24 24" width="18" height="18">
                             <path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
@@ -68,22 +68,24 @@
                     </button>
                 </div>
             </div>
-            <div class="panel-content" id="preview-content">
-                <!-- 预览内容动态加载 -->
+            
+            <div class="page-content">
+                <div id="preview-content" class="preview-container">
+                    <!-- 预览内容动态加载 -->
+                </div>
             </div>
-        </section>
+        </div>
 
-        <!-- 代码/解释面板 -->
-        <section class="slide-panel" id="code-panel">
-            <div class="panel-header">
-                <h3 class="panel-title">
+        <!-- 页面2：代码/解释 -->
+        <div class="page" id="page-code">
+            <div class="page-header">
+                <h2>
                     <svg viewBox="0 0 24 24" width="20" height="20">
                         <path fill="currentColor" d="M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z"/>
                     </svg>
-                    <span id="code-title">代码</span>
-                </h3>
-                <div class="panel-controls">
-                    <!-- 根据模式显示不同按钮 -->
+                    <span id="code-page-title">代码</span>
+                </h2>
+                <div class="page-controls">
                     <button id="copy-code" class="icon-btn" title="复制代码">
                         <svg viewBox="0 0 24 24" width="18" height="18">
                             <path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
@@ -92,16 +94,16 @@
                 </div>
             </div>
             
-            <div class="panel-content">
+            <div class="page-content">
                 <!-- 学习模式内容 -->
                 <div id="learn-content" class="content-section">
                     <div class="step-explanation">
-                        <h4 id="learn-title">HTML文档结构</h4>
+                        <h3 id="learn-title">HTML文档结构</h3>
                         <p id="learn-description"></p>
                     </div>
                     <div class="code-display">
                         <div class="section-header">
-                            <h5>示例代码</h5>
+                            <h4>示例代码</h4>
                             <button id="copy-example" class="small-btn">复制</button>
                         </div>
                         <pre><code id="example-code" class="language-html"></code></pre>
@@ -111,26 +113,26 @@
                 <!-- 练习模式内容 -->
                 <div id="practice-content" class="content-section" style="display: none;">
                     <div class="practice-instructions">
-                        <h4 id="practice-title">练习任务</h4>
+                        <h3 id="practice-title">练习任务</h3>
                         <ul id="task-list"></ul>
                     </div>
                     <div class="code-editor">
                         <div class="section-header">
-                            <h5>代码编辑器</h5>
+                            <h4>代码编辑器</h4>
                             <button id="clear-editor" class="small-btn">清空</button>
                         </div>
                         <textarea id="code-editor" placeholder="在这里编写你的代码..."></textarea>
                     </div>
                     <div class="practice-hint">
                         <div class="section-header">
-                            <h5>💡 提示</h5>
+                            <h4>💡 提示</h4>
                             <button id="toggle-hint" class="small-btn">显示</button>
                         </div>
                         <p id="hint-text"></p>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
     </main>
 
     <!-- 底部导航栏 -->
@@ -202,4 +204,3 @@
     <script src="scripts/app.js"></script>
 </body>
 </html>
-
