@@ -154,21 +154,18 @@ body {
     display: flex;
     width: 200%;
     height: calc(100vh - 160px);
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    transition: transform 0.3s ease-out;
     position: relative;
-    transition: transform 0.3s ease;
-}
-
-.slide-container::-webkit-scrollbar {
-    display: none;
+    will-change: transform;
 }
 
 .slide-panel {
-    width: 50%;
+    width: 50vw; /* 使用视口宽度而不是百分比 */
     height: 100%;
     flex-shrink: 0;
     scroll-snap-align: start;
@@ -176,7 +173,9 @@ body {
     flex-direction: column;
     background: white;
     position: relative;
+    box-sizing: border-box;
 }
+
 
 /* 面板头部 */
 .panel-header {
@@ -828,4 +827,59 @@ pre code {
     font-weight: 500;
     text-align: center;
     padding: 0 20px;
+}
+
+/* 在styles/main.css中添加以下样式 */
+/* 滑动动画 */
+@keyframes swipeLeft {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes swipeRight {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+.swipe-left {
+    animation: swipeLeft 0.3s ease-out forwards;
+}
+
+.swipe-right {
+    animation: swipeRight 0.3s ease-out forwards;
+}
+
+/* 滑动提示动画改进 */
+@keyframes swipeHintMobile {
+    0%, 100% { transform: translateX(0) translateY(0); opacity: 0.7; }
+    25% { transform: translateX(-5px) translateY(0); opacity: 1; }
+    50% { transform: translateX(0) translateY(0); opacity: 0.7; }
+    75% { transform: translateX(5px) translateY(0); opacity: 1; }
+}
+
+.swipe-hint svg {
+    animation: swipeHintMobile 2s infinite ease-in-out;
+}
+
+/* 触摸反馈 */
+.touch-active {
+    opacity: 0.9;
+    transform: scale(0.98);
+}
+
+/* 防止文字选择 */
+* {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* 允许代码编辑器选择 */
+#code-editor {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
