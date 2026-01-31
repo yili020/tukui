@@ -7,32 +7,25 @@ class PageLearningApp {
         this.isHintVisible = true;
         
         // 触摸事件变量
-        this.touchStartX = 0;
-        this.touchStartY = 0;
-        this.touchEndX = 0;
-        this.touchEndY = 0;
-        this.swipeThreshold = 50; // 滑动阈值
-        this.isSwiping = false;
+        this.startX = 0;
+        this.startY = 0;
+        this.endX = 0;
+        this.endY = 0;
+        this.swipeThreshold = 30; // 降低滑动阈值
         
         // 页面元素
         this.previewPage = document.getElementById('page-preview');
         this.codePage = document.getElementById('page-code');
-        
-        this.showedSwipeHint = localStorage.getItem('showedSwipeHint') === 'true';
+        this.container = document.querySelector('.pages-container');
         
         this.initialize();
     }
 
     initialize() {
-        // 初始化滑动提示
-        if (!this.showedSwipeHint) {
-            this.showSwipeHint();
-        }
-        
         // 设置事件监听器
         this.setupEventListeners();
         
-        // 初始化页面
+        // 初始化页面状态
         this.setupPages();
         
         // 渲染初始步骤
@@ -44,244 +37,8 @@ class PageLearningApp {
     }
 
     setupPages() {
-        // 设置页面初始状态
-        this.previewPage.classList.add('active');
-        this.codePage.classList.remove('active');
-        
-        // 添加触摸事件监听器
-        this.addTouchListeners();
-        
-        // 添加鼠标事件监听器（桌面端）
-        this.addMouseListeners();
-    }
-
-    addTouchListeners() {
-        // 为两个页面都添加触摸事件
-        const pages = [this.previewPage, this.codePage];
-        
-        pages.forEach(page => {
-            // 触摸开始
-            page.addEventListener('touchstart', (e) => {
-                this.handleTouchStart(e, page);
-            }, { passive: true });
-
-            // 触摸移动
-            page.addEventListener('touchmove', (e) => {
-                this.handleTouchMove(e, page);
-            }, { passive: false });
-
-            // 触摸结束
-            page.addEventListener('touchend', (e) => {
-                this.handleTouchEnd(e, page);
-            });
-
-            // 触摸取消
-            page.addEventListener('touchcancel', () => {
-                this.cancelTouch(page);
-            });
-        });
-    }
-
-    addMouseListeners() {
-        let isDragging = false;
-        let startX = 0;
-        let currentPage = null;
-        
-        // 鼠标按下
-        const pages = [this.previewPage, this.codePage];
-        
-        pages.forEach(page => {
-            page.addEventListener('mousedown', (e) => {
-                // 只在移动端或小屏幕上启用鼠标拖动
-                if (window.innerWidth >= 768) return;
-                
-                isDragging = true;
-                startX = e.clientX;
-                currentPage = page;
-                page.style.cursor = 'grabbing';
-                page.classList.add('touch-active');
-                e.preventDefault();
-            });
-        });
-
-        // 鼠标移动
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            const deltaX = e.clientX - startX;
-            
-            // 如果是水平移动，阻止默认行为
-            if (Math.abs(deltaX) > 10) {
-                e.preventDefault();
-            }
-        });
-
-        // 鼠标松开
-        document.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
-            
-            const endX = e.clientX;
-            const deltaX = endX - startX;
-            
-            if (Math.abs(deltaX) > 50) {
-                if (currentPage === this.previewPage && deltaX < 0) {
-                    // 在预览页面向左滑动，切换到代码页
-                    this.switchPage('code');
-                } else if (currentPage === this.codePage && deltaX > 0) {
-                    // 在代码页面向右滑动，切换到预览页
-                    this.switchPage('preview');
-                }
-            }
-            
-            // 重置状态
-            isDragging = false;
-            if (currentPage) {
-                currentPage.style.cursor = '';
-                currentPage.classList.remove('touch-active');
-                currentPage = null;
-            }
-        });
-
-        // 鼠标离开
-        pages.forEach(page => {
-            page.addEventListener('mouseleave', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    page.style.cursor = '';
-                    page.classList.remove('touch-active');
-                }
-            });
-        });
-    }
-
-    handleTouchStart(e, page) {
-        if (e.touches.length !== 1) return;
-        
-        this.touchStartX = e.touches[0].clientX;
-        this.touchStartY = e.touches[0].clientY;
-        this.isSwiping = true;
-        
-        // 添加触摸反馈
-        page.classList.add('touch-active');
-    }
-
-    handleTouchMove(e, page) {
-        if (!this.isSwiping || e.touches.length !== 1) return;
-        
-        const touchX = e.touches[0].clientX;
-        const touchY = e.touches[0].clientY;
-        
-        // 计算滑动距离
-        const deltaX = touchX - this.touchStartX;
-        const deltaY = touchY - this.touchStartY;
-        
-        // 如果是垂直滚动，不阻止
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            return;
-        }
-        
-        // 如果是水平滑动，阻止垂直滚动
-        e.preventDefault();
-    }
-
-    handleTouchEnd(e, page) {
-        if (!this.isSwiping) return;
-        
-        this.isSwiping = false;
-        this.touchEndX = e.changedTouches[0].clientX;
-        this.touchEndY = e.changedTouches[0].clientY;
-        
-        // 移除触摸反馈
-        page.classList.remove('touch-active');
-        
-        // 计算滑动距离和方向
-        const deltaX = this.touchEndX - this.touchStartX;
-        const deltaY = this.touchEndY - this.touchStartY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
-        // 确定滑动方向
-        if (distance > this.swipeThreshold) {
-            const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-            
-            // 如果是水平滑动（角度在-45到45度之间）
-            if (Math.abs(angle) < 45) {
-                if (deltaX < 0 && this.currentPage === 'preview') {
-                    // 在预览页面向左滑动，切换到代码页
-                    this.switchPage('code');
-                } else if (deltaX > 0 && this.currentPage === 'code') {
-                    // 在代码页面向右滑动，切换到预览页
-                    this.switchPage('preview');
-                }
-            }
-        }
-    }
-
-    cancelTouch(page) {
-        this.isSwiping = false;
-        page.classList.remove('touch-active');
-    }
-
-    switchPage(page) {
-        if (page === this.currentPage) return;
-        
-        this.currentPage = page;
-        
-        // 更新页面显示
-        if (page === 'preview') {
-            this.previewPage.classList.add('active');
-            this.codePage.classList.remove('active');
-            
-            // 添加滑动动画类
-            this.previewPage.classList.remove('slide-right');
-            this.codePage.classList.remove('slide-left');
-            
-            this.previewPage.classList.add('slide-left');
-            this.codePage.classList.add('slide-right');
-            
-            // 动画结束后移除类
-            setTimeout(() => {
-                this.previewPage.classList.remove('slide-left');
-                this.codePage.classList.remove('slide-right');
-            }, 300);
-        } else {
-            this.codePage.classList.add('active');
-            this.previewPage.classList.remove('active');
-            
-            // 添加滑动动画类
-            this.previewPage.classList.remove('slide-right');
-            this.codePage.classList.remove('slide-left');
-            
-            this.previewPage.classList.add('slide-right');
-            this.codePage.classList.add('slide-left');
-            
-            // 动画结束后移除类
-            setTimeout(() => {
-                this.previewPage.classList.remove('slide-right');
-                this.codePage.classList.remove('slide-left');
-            }, 300);
-        }
-        
-        // 更新指示器
-        this.updatePageIndicator();
-        
-        // 如果是第一次滑动，隐藏提示
-        if (!this.showedSwipeHint) {
-            this.hideSwipeHint();
-            localStorage.setItem('showedSwipeHint', 'true');
-            this.showedSwipeHint = true;
-        }
-    }
-
-    updatePageIndicator() {
-        // 更新指示器点
-        document.querySelectorAll('.page-dot').forEach((dot, index) => {
-            if ((this.currentPage === 'preview' && index === 0) || 
-                (this.currentPage === 'code' && index === 1)) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
+        // 设置初始页面状态
+        this.updatePageVisibility();
     }
 
     setupEventListeners() {
@@ -304,46 +61,9 @@ class PageLearningApp {
             this.resetCurrentCode();
         });
 
-        // 全屏预览
-        document.getElementById('fullscreen-preview').addEventListener('click', () => {
-            this.toggleFullscreen();
-        });
-
-        document.getElementById('close-fullscreen').addEventListener('click', () => {
-            this.toggleFullscreen();
-        });
-
         // 复制代码
         document.getElementById('copy-example').addEventListener('click', () => {
             this.copyExampleCode();
-        });
-
-        document.getElementById('copy-code').addEventListener('click', () => {
-            this.copyUserCode();
-        });
-
-        // 清空编辑器
-        document.getElementById('clear-editor').addEventListener('click', () => {
-            this.clearEditor();
-        });
-
-        // 显示/隐藏提示
-        document.getElementById('toggle-hint').addEventListener('click', () => {
-            this.toggleHint();
-        });
-
-        // 菜单控制
-        document.getElementById('menu-toggle').addEventListener('click', () => {
-            this.toggleMenu();
-        });
-
-        document.getElementById('close-menu').addEventListener('click', () => {
-            this.toggleMenu();
-        });
-
-        // 重置进度
-        document.getElementById('reset-progress').addEventListener('click', () => {
-            this.resetProgress();
         });
 
         // 点击指示器切换页面
@@ -361,55 +81,204 @@ class PageLearningApp {
             this.lessonManager.saveProgress();
         });
 
-        // 点击步骤列表项跳转
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#step-list li')) {
-                const stepIndex = parseInt(e.target.closest('li').dataset.index);
-                if (this.lessonManager.goToStep(stepIndex)) {
-                    this.renderCurrentStep();
-                    this.updateUI();
-                    this.toggleMenu();
+        // 添加触摸事件监听器到整个页面
+        this.setupTouchEvents();
+        
+        // 添加键盘事件
+        this.setupKeyboardEvents();
+    }
+
+    setupTouchEvents() {
+        let isSwiping = false;
+        let startX = 0;
+        let currentX = 0;
+        
+        // 触摸开始
+        this.container.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            
+            isSwiping = true;
+            startX = e.touches[0].clientX;
+            currentX = startX;
+            
+            // 显示滑动提示
+            this.showSwipeHint();
+        }, { passive: true });
+
+        // 触摸移动
+        this.container.addEventListener('touchmove', (e) => {
+            if (!isSwiping || e.touches.length !== 1) return;
+            
+            e.preventDefault();
+            
+            const touchX = e.touches[0].clientX;
+            const deltaX = touchX - startX;
+            
+            // 限制滑动方向
+            if ((this.currentPage === 'preview' && deltaX > 0) || 
+                (this.currentPage === 'code' && deltaX < 0)) {
+                return;
+            }
+            
+            currentX = touchX;
+            
+            // 实时更新页面位置
+            this.updatePagePositionDuringSwipe(deltaX);
+        }, { passive: false });
+
+        // 触摸结束
+        this.container.addEventListener('touchend', (e) => {
+            if (!isSwiping) return;
+            
+            isSwiping = false;
+            const deltaX = currentX - startX;
+            
+            // 判断是否切换页面
+            if (Math.abs(deltaX) > this.swipeThreshold) {
+                if (deltaX < 0 && this.currentPage === 'preview') {
+                    // 向左滑动，切换到代码页面
+                    this.switchPage('code');
+                } else if (deltaX > 0 && this.currentPage === 'code') {
+                    // 向右滑动，切换到预览页面
+                    this.switchPage('preview');
+                } else {
+                    // 回到原位
+                    this.resetPagePosition();
                 }
+            } else {
+                // 回到原位
+                this.resetPagePosition();
             }
         });
 
-        // 键盘快捷键支持
+        // 鼠标事件（桌面端测试用）
+        this.container.addEventListener('mousedown', (e) => {
+            isSwiping = true;
+            startX = e.clientX;
+            currentX = startX;
+            
+            const moveHandler = (moveEvent) => {
+                if (!isSwiping) return;
+                
+                const deltaX = moveEvent.clientX - startX;
+                
+                if ((this.currentPage === 'preview' && deltaX > 0) || 
+                    (this.currentPage === 'code' && deltaX < 0)) {
+                    return;
+                }
+                
+                currentX = moveEvent.clientX;
+                this.updatePagePositionDuringSwipe(deltaX);
+            };
+            
+            const upHandler = () => {
+                if (!isSwiping) return;
+                
+                isSwiping = false;
+                const deltaX = currentX - startX;
+                
+                if (Math.abs(deltaX) > this.swipeThreshold) {
+                    if (deltaX < 0 && this.currentPage === 'preview') {
+                        this.switchPage('code');
+                    } else if (deltaX > 0 && this.currentPage === 'code') {
+                        this.switchPage('preview');
+                    } else {
+                        this.resetPagePosition();
+                    }
+                } else {
+                    this.resetPagePosition();
+                }
+                
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', upHandler);
+            };
+            
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', upHandler);
+        });
+    }
+
+    updatePagePositionDuringSwipe(deltaX) {
+        const containerWidth = this.container.offsetWidth;
+        let previewTransform = 0;
+        let codeTransform = 100;
+        
+        if (this.currentPage === 'preview') {
+            // 从预览页面开始向左滑动
+            previewTransform = (deltaX / containerWidth) * 100;
+            codeTransform = 100 + previewTransform;
+        } else {
+            // 从代码页面开始向右滑动
+            codeTransform = (deltaX / containerWidth) * 100;
+            previewTransform = -100 + codeTransform;
+        }
+        
+        // 限制滑动范围
+        previewTransform = Math.max(-100, Math.min(0, previewTransform));
+        codeTransform = Math.max(0, Math.min(100, codeTransform));
+        
+        this.previewPage.style.transform = `translateX(${previewTransform}%)`;
+        this.codePage.style.transform = `translateX(${codeTransform}%)`;
+    }
+
+    resetPagePosition() {
+        this.updatePageVisibility();
+    }
+
+    switchPage(page) {
+        if (page === this.currentPage) return;
+        
+        this.currentPage = page;
+        this.updatePageVisibility();
+        this.updatePageIndicator();
+    }
+
+    updatePageVisibility() {
+        if (this.currentPage === 'preview') {
+            // 显示预览页面，隐藏代码页面
+            this.previewPage.style.transform = 'translateX(0)';
+            this.codePage.style.transform = 'translateX(100%)';
+            this.previewPage.classList.add('active');
+            this.codePage.classList.remove('active');
+        } else {
+            // 显示代码页面，隐藏预览页面
+            this.previewPage.style.transform = 'translateX(-100%)';
+            this.codePage.style.transform = 'translateX(0)';
+            this.codePage.classList.add('active');
+            this.previewPage.classList.remove('active');
+        }
+    }
+
+    updatePageIndicator() {
+        // 更新指示器点
+        document.querySelectorAll('.page-dot').forEach((dot, index) => {
+            if ((this.currentPage === 'preview' && index === 0) || 
+                (this.currentPage === 'code' && index === 1)) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    setupKeyboardEvents() {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft' && !e.target.matches('textarea, input')) {
                 if (this.currentPage === 'code') {
-                    // 在代码页面，向左箭头应该切换到预览页面
                     this.switchPage('preview');
                     e.preventDefault();
                 } else {
-                    // 在预览页面，向左箭头应该是上一步
                     this.handlePrevStep();
                     e.preventDefault();
                 }
             } else if (e.key === 'ArrowRight' && !e.target.matches('textarea, input')) {
                 if (this.currentPage === 'preview') {
-                    // 在预览页面，向右箭头应该切换到代码页面
                     this.switchPage('code');
                     e.preventDefault();
                 } else {
-                    // 在代码页面，向右箭头应该是下一步
                     this.handleNextStep();
                     e.preventDefault();
                 }
-            } else if (e.key === '1') {
-                // 快捷键1：切换到预览
-                this.switchPage('preview');
-                e.preventDefault();
-            } else if (e.key === '2') {
-                // 快捷键2：切换到代码
-                this.switchPage('code');
-                e.preventDefault();
-            }
-        });
-
-        // 处理外部点击关闭菜单
-        document.addEventListener('click', (e) => {
-            if (this.isMenuOpen && !e.target.closest('#mobile-menu') && !e.target.closest('#menu-toggle')) {
-                this.toggleMenu();
             }
         });
     }
@@ -467,9 +336,6 @@ class PageLearningApp {
 
         // 更新代码页面标题
         this.updateCodePageTitle();
-
-        // 更新步骤列表
-        this.updateStepList();
 
         // 重新高亮代码
         setTimeout(() => hljs.highlightAll(), 10);
@@ -529,7 +395,6 @@ class PageLearningApp {
 
     renderPreview(code) {
         const previewContent = document.getElementById('preview-content');
-        const fullscreenContent = document.getElementById('fullscreen-content');
         
         try {
             // 创建安全的预览
@@ -541,11 +406,6 @@ class PageLearningApp {
             
             // 更新预览区域
             previewContent.innerHTML = previewHTML;
-            
-            // 更新全屏预览
-            if (fullscreenContent) {
-                fullscreenContent.innerHTML = previewHTML;
-            }
             
         } catch (error) {
             console.error('渲染预览失败:', error);
@@ -604,77 +464,13 @@ class PageLearningApp {
         }
     }
 
-    clearEditor() {
-        const codeEditor = document.getElementById('code-editor');
-        codeEditor.value = '';
-        
-        // 更新预览
-        this.renderPreview('');
-        this.showToast('编辑器已清空');
-    }
-
-    toggleFullscreen() {
-        this.isFullscreen = !this.isFullscreen;
-        const modal = document.getElementById('fullscreen-modal');
-        modal.classList.toggle('active', this.isFullscreen);
-        
-        if (this.isFullscreen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
+    copyExampleCode() {
+        const step = this.lessonManager.getCurrentStep();
+        if (step?.exampleCode) {
+            navigator.clipboard.writeText(step.exampleCode)
+                .then(() => this.showToast('示例代码已复制'))
+                .catch(() => this.showToast('复制失败，请手动复制'));
         }
-    }
-
-    toggleHint() {
-        this.isHintVisible = !this.isHintVisible;
-        const hintText = document.getElementById('hint-text');
-        hintText.style.display = this.isHintVisible ? 'block' : 'none';
-        
-        const toggleBtn = document.getElementById('toggle-hint');
-        toggleBtn.textContent = this.isHintVisible ? '隐藏' : '显示';
-    }
-
-    toggleMenu() {
-        this.isMenuOpen = !this.isMenuOpen;
-        document.getElementById('mobile-menu').classList.toggle('active', this.isMenuOpen);
-        
-        if (this.isMenuOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-    }
-
-    updateStepList() {
-        const stepList = document.getElementById('step-list');
-        const steps = this.lessonManager.currentCourse.steps;
-        const currentStep = this.lessonManager.getCurrentStep();
-        
-        stepList.innerHTML = '';
-        
-        steps.forEach((step, index) => {
-            const li = document.createElement('li');
-            li.dataset.index = index;
-            
-            if (step.id === currentStep.id) {
-                li.classList.add('active');
-            }
-            
-            // 检查步骤是否完成（用户有保存代码）
-            const userCode = this.lessonManager.getUserCode(step.id);
-            if (step.type === 'practice' && userCode && userCode !== step.initialCode) {
-                li.classList.add('completed');
-            }
-            
-            li.innerHTML = `
-                <span>${step.title}</span>
-                <span style="font-size: 12px; color: #666; margin-left: auto;">
-                    ${step.type === 'learn' ? '📚' : '💻'}
-                </span>
-            `;
-            
-            stepList.appendChild(li);
-        });
     }
 
     updateUI() {
@@ -684,61 +480,18 @@ class PageLearningApp {
         prevBtn.disabled = this.lessonManager.isFirstStep();
         nextBtn.disabled = this.lessonManager.isLastStep();
         
-        // 更新步骤列表高亮
-        this.updateStepList();
-        
         // 更新页面指示器
         this.updatePageIndicator();
     }
 
     showSwipeHint() {
-        // 创建滑动提示覆盖层
-        const overlay = document.createElement('div');
-        overlay.className = 'swipe-overlay';
-        overlay.innerHTML = `
-            <div class="swipe-gesture">
-                <svg viewBox="0 0 24 24" width="60" height="60">
-                    <path fill="white" d="M6.5,17.5L8,16L3,11L8,6L6.5,4.5L0,11L6.5,17.5M17,6.5L22,11.5L17,16.5V14.5L19.5,11.5L17,8.5V6.5Z"/>
-                </svg>
-            </div>
-            <p style="font-size: 18px; font-weight: 500; text-align: center; max-width: 80%; line-height: 1.5;">
-                在预览页面向左滑动 → 切换到代码视图<br>
-                在代码页面向右滑动 → 切换到预览视图
-            </p>
-            <button id="close-swipe-hint" style="padding: 12px 24px; background: white; color: #333; border: none; border-radius: 24px; margin-top: 20px; font-size: 16px; font-weight: 500; cursor: pointer;">
-                我知道了
-            </button>
-        `;
-        
-        document.body.appendChild(overlay);
-        
-        // 点击关闭提示
-        overlay.querySelector('#close-swipe-hint').addEventListener('click', () => {
-            this.hideSwipeHint();
-            localStorage.setItem('showedSwipeHint', 'true');
-            this.showedSwipeHint = true;
-        });
-        
-        // 5秒后自动关闭
-        setTimeout(() => {
-            if (document.body.contains(overlay)) {
-                this.hideSwipeHint();
-                localStorage.setItem('showedSwipeHint', 'true');
-                this.showedSwipeHint = true;
-            }
-        }, 5000);
-    }
-
-    hideSwipeHint() {
-        const overlay = document.querySelector('.swipe-overlay');
-        if (overlay) {
-            overlay.style.opacity = '0';
-            overlay.style.transition = 'opacity 0.3s';
+        // 短暂的滑动提示
+        const hint = document.querySelector('.swipe-hint');
+        if (hint) {
+            hint.style.opacity = '1';
             setTimeout(() => {
-                if (document.body.contains(overlay)) {
-                    overlay.remove();
-                }
-            }, 300);
+                hint.style.opacity = '0.7';
+            }, 1000);
         }
     }
 
@@ -781,19 +534,6 @@ class PageLearningApp {
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
-
-    resetProgress() {
-        if (confirm('确定要重置所有学习进度吗？这将清除所有保存的代码。')) {
-            localStorage.removeItem(this.lessonManager.progressKey);
-            this.lessonManager.userCodeMap = {};
-            this.lessonManager.currentStepIndex = 0;
-            
-            this.renderCurrentStep();
-            this.updateUI();
-            this.showToast('进度已重置');
-            this.toggleMenu();
-        }
-    }
 }
 
 // 启动应用
@@ -822,18 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
             border: 1px solid #f5c6cb;
         }
         
-        .preview-error h4 {
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .preview-error p {
-            font-size: 14px;
-            font-family: monospace;
-            background: white;
-            padding: 10px;
-            border-radius: var(--radius-sm);
-            overflow: auto;
+        .swipe-hint {
+            transition: opacity 0.3s ease;
         }
     `;
     document.head.appendChild(style);
