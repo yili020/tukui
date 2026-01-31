@@ -1,7 +1,7 @@
-class SlideLearningApp {
+class PageLearningApp {
     constructor() {
         this.lessonManager = new LessonManager();
-        this.currentPanel = 'preview'; // 'preview' 或 'code'
+        this.currentPage = 'preview'; // 'preview' 或 'code'
         this.isFullscreen = false;
         this.isMenuOpen = false;
         this.isHintVisible = true;
@@ -13,6 +13,10 @@ class SlideLearningApp {
         this.touchEndY = 0;
         this.swipeThreshold = 50; // 滑动阈值
         this.isSwiping = false;
+        
+        // 页面元素
+        this.previewPage = document.getElementById('page-preview');
+        this.codePage = document.getElementById('page-code');
         
         this.showedSwipeHint = localStorage.getItem('showedSwipeHint') === 'true';
         
@@ -28,8 +32,8 @@ class SlideLearningApp {
         // 设置事件监听器
         this.setupEventListeners();
         
-        // 初始化滑动容器
-        this.setupSlideContainer();
+        // 初始化页面
+        this.setupPages();
         
         // 渲染初始步骤
         this.renderCurrentStep();
@@ -39,60 +43,65 @@ class SlideLearningApp {
         hljs.highlightAll();
     }
 
-    setupSlideContainer() {
-        const slideContainer = document.getElementById('slide-container');
-        const previewPanel = document.getElementById('preview-panel');
-        const codePanel = document.getElementById('code-panel');
-        
-        // 设置初始状态
-        slideContainer.style.transform = 'translateX(0)';
-        previewPanel.classList.add('active');
-        codePanel.classList.remove('active');
+    setupPages() {
+        // 设置页面初始状态
+        this.previewPage.classList.add('active');
+        this.codePage.classList.remove('active');
         
         // 添加触摸事件监听器
-        this.addTouchListeners(slideContainer);
+        this.addTouchListeners();
         
         // 添加鼠标事件监听器（桌面端）
-        this.addMouseListeners(slideContainer);
+        this.addMouseListeners();
+    }
+
+    addTouchListeners() {
+        // 为两个页面都添加触摸事件
+        const pages = [this.previewPage, this.codePage];
         
-        // 窗口大小改变时重新计算
-        window.addEventListener('resize', () => {
-            this.updateSlidePosition();
+        pages.forEach(page => {
+            // 触摸开始
+            page.addEventListener('touchstart', (e) => {
+                this.handleTouchStart(e, page);
+            }, { passive: true });
+
+            // 触摸移动
+            page.addEventListener('touchmove', (e) => {
+                this.handleTouchMove(e, page);
+            }, { passive: false });
+
+            // 触摸结束
+            page.addEventListener('touchend', (e) => {
+                this.handleTouchEnd(e, page);
+            });
+
+            // 触摸取消
+            page.addEventListener('touchcancel', () => {
+                this.cancelTouch(page);
+            });
         });
     }
 
-    addTouchListeners(container) {
-        // 触摸开始
-        container.addEventListener('touchstart', (e) => {
-            this.handleTouchStart(e);
-        }, { passive: true });
-
-        // 触摸移动
-        container.addEventListener('touchmove', (e) => {
-            this.handleTouchMove(e);
-        }, { passive: false });
-
-        // 触摸结束
-        container.addEventListener('touchend', (e) => {
-            this.handleTouchEnd(e);
-        });
-
-        // 触摸取消
-        container.addEventListener('touchcancel', () => {
-            this.cancelTouch();
-        });
-    }
-
-    addMouseListeners(container) {
+    addMouseListeners() {
         let isDragging = false;
         let startX = 0;
+        let currentPage = null;
         
         // 鼠标按下
-        container.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            container.style.cursor = 'grabbing';
-            e.preventDefault();
+        const pages = [this.previewPage, this.codePage];
+        
+        pages.forEach(page => {
+            page.addEventListener('mousedown', (e) => {
+                // 只在移动端或小屏幕上启用鼠标拖动
+                if (window.innerWidth >= 768) return;
+                
+                isDragging = true;
+                startX = e.clientX;
+                currentPage = page;
+                page.style.cursor = 'grabbing';
+                page.classList.add('touch-active');
+                e.preventDefault();
+            });
         });
 
         // 鼠标移动
@@ -115,31 +124,37 @@ class SlideLearningApp {
             const deltaX = endX - startX;
             
             if (Math.abs(deltaX) > 50) {
-                if (deltaX > 0 && this.currentPanel === 'code') {
-                    // 向右滑动，切换到预览
-                    this.switchPanel('preview');
-                } else if (deltaX < 0 && this.currentPanel === 'preview') {
-                    // 向左滑动，切换到代码
-                    this.switchPanel('code');
+                if (currentPage === this.previewPage && deltaX < 0) {
+                    // 在预览页面向左滑动，切换到代码页
+                    this.switchPage('code');
+                } else if (currentPage === this.codePage && deltaX > 0) {
+                    // 在代码页面向右滑动，切换到预览页
+                    this.switchPage('preview');
                 }
             }
             
+            // 重置状态
             isDragging = false;
-            container.style.cursor = '';
-            this.updateSlidePosition();
+            if (currentPage) {
+                currentPage.style.cursor = '';
+                currentPage.classList.remove('touch-active');
+                currentPage = null;
+            }
         });
 
         // 鼠标离开
-        container.addEventListener('mouseleave', () => {
-            if (isDragging) {
-                isDragging = false;
-                container.style.cursor = '';
-                this.updateSlidePosition();
-            }
+        pages.forEach(page => {
+            page.addEventListener('mouseleave', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    page.style.cursor = '';
+                    page.classList.remove('touch-active');
+                }
+            });
         });
     }
 
-    handleTouchStart(e) {
+    handleTouchStart(e, page) {
         if (e.touches.length !== 1) return;
         
         this.touchStartX = e.touches[0].clientX;
@@ -147,10 +162,10 @@ class SlideLearningApp {
         this.isSwiping = true;
         
         // 添加触摸反馈
-        e.currentTarget.classList.add('touch-active');
+        page.classList.add('touch-active');
     }
 
-    handleTouchMove(e) {
+    handleTouchMove(e, page) {
         if (!this.isSwiping || e.touches.length !== 1) return;
         
         const touchX = e.touches[0].clientX;
@@ -167,27 +182,9 @@ class SlideLearningApp {
         
         // 如果是水平滑动，阻止垂直滚动
         e.preventDefault();
-        
-        // 根据当前面板限制滑动方向
-        if ((this.currentPanel === 'preview' && deltaX < 0) || 
-            (this.currentPanel === 'code' && deltaX > 0)) {
-            // 计算滑动比例，限制在0-100%
-            let slidePercent = 0;
-            const containerWidth = window.innerWidth;
-            
-            if (this.currentPanel === 'preview') {
-                // 从左向右滑动（预览到代码）
-                slidePercent = Math.min(100, Math.abs(deltaX) / containerWidth * 100);
-                this.updateSlideTransform(-slidePercent);
-            } else {
-                // 从右向左滑动（代码到预览）
-                slidePercent = Math.min(100, Math.abs(deltaX) / containerWidth * 100);
-                this.updateSlideTransform(-100 + slidePercent);
-            }
-        }
     }
 
-    handleTouchEnd(e) {
+    handleTouchEnd(e, page) {
         if (!this.isSwiping) return;
         
         this.isSwiping = false;
@@ -195,7 +192,7 @@ class SlideLearningApp {
         this.touchEndY = e.changedTouches[0].clientY;
         
         // 移除触摸反馈
-        e.currentTarget.classList.remove('touch-active');
+        page.classList.remove('touch-active');
         
         // 计算滑动距离和方向
         const deltaX = this.touchEndX - this.touchStartX;
@@ -208,60 +205,64 @@ class SlideLearningApp {
             
             // 如果是水平滑动（角度在-45到45度之间）
             if (Math.abs(angle) < 45) {
-                if (deltaX < 0 && this.currentPanel === 'preview') {
-                    // 向左滑动，切换到代码
-                    this.switchPanel('code');
-                } else if (deltaX > 0 && this.currentPanel === 'code') {
-                    // 向右滑动，切换到预览
-                    this.switchPanel('preview');
-                } else {
-                    // 滑动方向不正确，回到原位
-                    this.updateSlidePosition();
+                if (deltaX < 0 && this.currentPage === 'preview') {
+                    // 在预览页面向左滑动，切换到代码页
+                    this.switchPage('code');
+                } else if (deltaX > 0 && this.currentPage === 'code') {
+                    // 在代码页面向右滑动，切换到预览页
+                    this.switchPage('preview');
                 }
-            } else {
-                // 垂直滑动，回到原位
-                this.updateSlidePosition();
             }
-        } else {
-            // 滑动距离不足，回到原位
-            this.updateSlidePosition();
         }
     }
 
-    cancelTouch() {
+    cancelTouch(page) {
         this.isSwiping = false;
-        this.updateSlidePosition();
-        document.querySelector('.slide-container').classList.remove('touch-active');
+        page.classList.remove('touch-active');
     }
 
-    updateSlideTransform(percent) {
-        const container = document.getElementById('slide-container');
-        container.style.transform = `translateX(${percent}%)`;
-    }
-
-    updateSlidePosition() {
-        const container = document.getElementById('slide-container');
+    switchPage(page) {
+        if (page === this.currentPage) return;
         
-        if (this.currentPanel === 'preview') {
-            container.style.transform = 'translateX(0)';
-            container.classList.remove('swipe-left', 'swipe-right');
-            container.classList.add('swipe-right');
+        this.currentPage = page;
+        
+        // 更新页面显示
+        if (page === 'preview') {
+            this.previewPage.classList.add('active');
+            this.codePage.classList.remove('active');
+            
+            // 添加滑动动画类
+            this.previewPage.classList.remove('slide-right');
+            this.codePage.classList.remove('slide-left');
+            
+            this.previewPage.classList.add('slide-left');
+            this.codePage.classList.add('slide-right');
+            
+            // 动画结束后移除类
+            setTimeout(() => {
+                this.previewPage.classList.remove('slide-left');
+                this.codePage.classList.remove('slide-right');
+            }, 300);
         } else {
-            container.style.transform = 'translateX(-50%)';
-            container.classList.remove('swipe-left', 'swipe-right');
-            container.classList.add('swipe-left');
+            this.codePage.classList.add('active');
+            this.previewPage.classList.remove('active');
+            
+            // 添加滑动动画类
+            this.previewPage.classList.remove('slide-right');
+            this.codePage.classList.remove('slide-left');
+            
+            this.previewPage.classList.add('slide-right');
+            this.codePage.classList.add('slide-left');
+            
+            // 动画结束后移除类
+            setTimeout(() => {
+                this.previewPage.classList.remove('slide-right');
+                this.codePage.classList.remove('slide-left');
+            }, 300);
         }
         
-        // 强制重绘
-        container.offsetHeight;
-    }
-
-    switchPanel(panel) {
-        if (panel === this.currentPanel) return;
-        
-        this.currentPanel = panel;
-        this.updateSlidePosition();
-        this.updatePanelIndicator();
+        // 更新指示器
+        this.updatePageIndicator();
         
         // 如果是第一次滑动，隐藏提示
         if (!this.showedSwipeHint) {
@@ -269,33 +270,18 @@ class SlideLearningApp {
             localStorage.setItem('showedSwipeHint', 'true');
             this.showedSwipeHint = true;
         }
-        
-        // 更新面板激活状态
-        const previewPanel = document.getElementById('preview-panel');
-        const codePanel = document.getElementById('code-panel');
-        
-        if (panel === 'preview') {
-            previewPanel.classList.add('active');
-            codePanel.classList.remove('active');
-        } else {
-            codePanel.classList.add('active');
-            previewPanel.classList.remove('active');
-        }
     }
 
-    updatePanelIndicator() {
+    updatePageIndicator() {
         // 更新指示器点
-        document.querySelectorAll('.indicator-dot').forEach((dot, index) => {
-            if ((this.currentPanel === 'preview' && index === 0) || 
-                (this.currentPanel === 'code' && index === 1)) {
+        document.querySelectorAll('.page-dot').forEach((dot, index) => {
+            if ((this.currentPage === 'preview' && index === 0) || 
+                (this.currentPage === 'code' && index === 1)) {
                 dot.classList.add('active');
             } else {
                 dot.classList.remove('active');
             }
         });
-        
-        // 更新代码标题
-        this.updateCodeTitle();
     }
 
     setupEventListeners() {
@@ -360,11 +346,11 @@ class SlideLearningApp {
             this.resetProgress();
         });
 
-        // 点击指示器切换面板
-        document.querySelectorAll('.indicator-dot').forEach(dot => {
+        // 点击指示器切换页面
+        document.querySelectorAll('.page-dot').forEach(dot => {
             dot.addEventListener('click', (e) => {
-                const panel = e.target.dataset.panel;
-                this.switchPanel(panel);
+                const page = e.target.dataset.page;
+                this.switchPage(page);
             });
         });
 
@@ -390,32 +376,32 @@ class SlideLearningApp {
         // 键盘快捷键支持
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft' && !e.target.matches('textarea, input')) {
-                // 左箭头：如果当前是代码面板，切换到预览面板
-                if (this.currentPanel === 'code') {
-                    this.switchPanel('preview');
+                if (this.currentPage === 'code') {
+                    // 在代码页面，向左箭头应该切换到预览页面
+                    this.switchPage('preview');
                     e.preventDefault();
                 } else {
-                    // 否则上一步
+                    // 在预览页面，向左箭头应该是上一步
                     this.handlePrevStep();
                     e.preventDefault();
                 }
             } else if (e.key === 'ArrowRight' && !e.target.matches('textarea, input')) {
-                // 右箭头：如果当前是预览面板，切换到代码面板
-                if (this.currentPanel === 'preview') {
-                    this.switchPanel('code');
+                if (this.currentPage === 'preview') {
+                    // 在预览页面，向右箭头应该切换到代码页面
+                    this.switchPage('code');
                     e.preventDefault();
                 } else {
-                    // 否则下一步
+                    // 在代码页面，向右箭头应该是下一步
                     this.handleNextStep();
                     e.preventDefault();
                 }
             } else if (e.key === '1') {
                 // 快捷键1：切换到预览
-                this.switchPanel('preview');
+                this.switchPage('preview');
                 e.preventDefault();
             } else if (e.key === '2') {
                 // 快捷键2：切换到代码
-                this.switchPanel('code');
+                this.switchPage('code');
                 e.preventDefault();
             }
         });
@@ -428,7 +414,6 @@ class SlideLearningApp {
         });
     }
 
-    // 其他方法保持不变...
     handlePrevStep() {
         if (this.lessonManager.prevStep()) {
             this.renderCurrentStep();
@@ -480,8 +465,8 @@ class SlideLearningApp {
             this.showPracticeMode(step);
         }
 
-        // 更新代码标题
-        this.updateCodeTitle();
+        // 更新代码页面标题
+        this.updateCodePageTitle();
 
         // 更新步骤列表
         this.updateStepList();
@@ -573,11 +558,11 @@ class SlideLearningApp {
         }
     }
 
-    updateCodeTitle() {
+    updateCodePageTitle() {
         const step = this.lessonManager.getCurrentStep();
         if (!step) return;
         
-        const codeTitle = document.getElementById('code-title');
+        const codeTitle = document.getElementById('code-page-title');
         codeTitle.textContent = step.type === 'learn' ? '代码解释' : '代码编辑器';
     }
 
@@ -701,6 +686,9 @@ class SlideLearningApp {
         
         // 更新步骤列表高亮
         this.updateStepList();
+        
+        // 更新页面指示器
+        this.updatePageIndicator();
     }
 
     showSwipeHint() {
@@ -713,9 +701,9 @@ class SlideLearningApp {
                     <path fill="white" d="M6.5,17.5L8,16L3,11L8,6L6.5,4.5L0,11L6.5,17.5M17,6.5L22,11.5L17,16.5V14.5L19.5,11.5L17,8.5V6.5Z"/>
                 </svg>
             </div>
-            <p style="font-size: 18px; font-weight: 500; text-align: center; max-width: 80%;">
-                向左滑动切换到代码视图<br>
-                向右滑动切换到预览视图
+            <p style="font-size: 18px; font-weight: 500; text-align: center; max-width: 80%; line-height: 1.5;">
+                在预览页面向左滑动 → 切换到代码视图<br>
+                在代码页面向右滑动 → 切换到预览视图
             </p>
             <button id="close-swipe-hint" style="padding: 12px 24px; background: white; color: #333; border: none; border-radius: 24px; margin-top: 20px; font-size: 16px; font-weight: 500; cursor: pointer;">
                 我知道了
@@ -847,42 +835,9 @@ document.addEventListener('DOMContentLoaded', () => {
             border-radius: var(--radius-sm);
             overflow: auto;
         }
-        
-        .swipe-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            flex-direction: column;
-            gap: 30px;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .swipe-gesture {
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.1); opacity: 1; }
-        }
     `;
     document.head.appendChild(style);
     
     // 初始化应用
-    window.app = new SlideLearningApp();
+    window.app = new PageLearningApp();
 });
