@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习页面 - CodeLearn</title>
+    
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/learning.css">
+    <link rel="stylesheet" href="assets/css/mobile.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="back-btn">
+                <span class="icon">←</span>
+                <span>返回首页</span>
+            </a>
+        </div>
+        <div class="header-center">
+            <h1 class="course-title" id="courseTitle">加载中...</h1>
+            <div class="step-info">
+                <span class="step-name" id="stepName"></span>
+                <span class="step-progress" id="stepProgress"></span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="mode-badge" id="modeBadge">学习模式</span>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 左侧：效果预览 -->
+        <section class="preview-section">
+            <div class="section-header">
+                <h2>
+                    <span class="icon">👁</span>
+                    效果预览
+                </h2>
+                <button class="btn-icon" id="fullscreenBtn" title="全屏">
+                    <span class="icon">⛶</span>
+                </button>
+            </div>
+            <div class="preview-container">
+                <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
+            </div>
+            <div class="preview-hint">
+                <span class="icon">ℹ️</span>
+                <span>代码编辑后自动更新预览，或点击"运行代码"按钮手动更新。</span>
+            </div>
+        </section>
+
+        <!-- 右侧：代码编辑/解释 -->
+        <section class="editor-section">
+            <div class="section-header">
+                <h2>
+                    <span class="icon">📝</span>
+                    <span id="editorTitle">代码编辑</span>
+                </h2>
+                <div class="editor-actions" id="editorActions">
+                    <button class="btn btn-primary" id="runCodeBtn">
+                        <span class="icon">▶</span>
+                        运行代码
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        <span class="icon">↺</span>
+                        重置
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 文件标签 -->
+            <div class="file-tabs" id="fileTabs"></div>
+            
+            <!-- 代码编辑器 -->
+            <div class="editor-container" id="editorContainer"></div>
+            
+            <!-- 代码解释区域 -->
+            <div class="explanation-panel" id="explanationPanel">
+                <div class="explanation-content" id="explanationContent"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部导航 -->
+    <footer class="footer">
+        <button class="btn btn-text" id="categoryBtn">
+            <span class="icon">☰</span>
+            分类
+        </button>
+        <div class="nav-controls">
+            <button class="btn btn-secondary" id="prevBtn">
+                <span class="icon">←</span>
+                上一步
+            </button>
+            <span class="step-indicator" id="stepIndicator">1/4</span>
+            <button class="btn btn-primary" id="nextBtn">
+                下一步
+                <span class="icon">→</span>
+            </button>
+        </div>
+    </footer>
+
+    <!-- 分类侧边栏 -->
+    <aside class="sidebar" id="categorySidebar">
+        <div class="sidebar-header">
+            <h3>课程分类</h3>
+            <button class="btn-icon" id="closeSidebar">✕</button>
+        </div>
+        <div class="sidebar-content" id="categoryContent">
+            <!-- 动态生成分类内容 -->
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- 全屏预览模态框 -->
+    <div class="modal" id="fullscreenModal">
+        <div class="modal-header">
+            <h3>全屏预览</h3>
+            <button class="btn-icon" id="closeFullscreen">✕</button>
+        </div>
+        <div class="modal-body">
+            <iframe id="fullscreenFrame" sandbox="allow-scripts"></iframe>
+        </div>
+    </div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="assets/js/storage.js"></script>
+    <script src="assets/js/data-loader.js"></script>
+    <script src="assets/js/editor.js"></script>
+    <script src="assets/js/learning.js"></script>
+</body>
+</html>

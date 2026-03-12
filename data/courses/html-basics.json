@@ -1,0 +1,80 @@
+{
+  "id": "html-basics",
+  "title": "HTML 基础入门",
+  "category": "前端开发",
+  "description": "学习 HTML 的基础知识，创建你的第一个网页",
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "认识 HTML 结构",
+      "mode": "learn",
+      "files": {
+        "index.html": {
+          "content": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>我的第一个网页</title>\n</head>\n<body>\n    <h1>Hello World!</h1>\n    <p>欢迎来到 HTML 的世界！</p>\n</body>\n</html>",
+          "editable": false
+        }
+      },
+      "explanation": "## HTML 文档结构\n\n这是一个基本的 HTML 文档结构：\n\n- `<!DOCTYPE html>` - 声明文档类型为 HTML5\n- `<html>` - HTML 文档的根元素\n- `<head>` - 包含元数据（字符编码、视口设置、标题）\n- `<body>` - 包含可见的页面内容\n\n### 常用标签\n\n- `<h1>` - 一级标题（最大）\n- `<p>` - 段落文本\n- `<title>` - 浏览器标签页标题",
+      "hint": ""
+    },
+    {
+      "id": "step-2",
+      "title": "添加样式",
+      "mode": "practice",
+      "files": {
+        "index.html": {
+          "content": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>样式练习</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n    <h1>Hello World!</h1>\n    <p>让我变得更有颜色吧！</p>\n</body>\n</html>",
+          "editable": false
+        },
+        "style.css": {
+          "content": "/* 在这里添加你的样式 */\nbody {\n    font-family: Arial, sans-serif;\n    text-align: center;\n    padding: 50px;\n}\n\nh1 {\n    color: #333;\n}\n\np {\n    color: #666;\n    font-size: 18px;\n}",
+          "editable": true
+        }
+      },
+      "explanation": "## CSS 样式\n\nCSS 用于美化 HTML 元素。在这个练习中：\n\n1. `font-family` - 设置字体\n2. `text-align` - 文本对齐方式\n3. `color` - 文字颜色\n4. `padding` - 内边距\n5. `font-size` - 字体大小\n\n**练习任务**：\n- 尝试修改 `h1` 的颜色为蓝色 (`blue` 或 `#0066cc`)\n- 给 `p` 标签添加 `background-color: #f0f0f0`\n- 修改 `padding` 的值看看效果",
+      "hint": "尝试将 `color: #333;` 改为 `color: blue;`"
+    },
+    {
+      "id": "step-3",
+      "title": "添加交互",
+      "mode": "practice",
+      "files": {
+        "index.html": {
+          "content": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>交互练习</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n    <h1>点击按钮试试看</h1>\n    <button id=\"myButton\">点我！</button>\n    <p id=\"message\"></p>\n    <script src=\"script.js\"></script>\n</body>\n</html>",
+          "editable": false
+        },
+        "style.css": {
+          "content": "body {\n    font-family: Arial, sans-serif;\n    text-align: center;\n    padding: 50px;\n    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n    min-height: 100vh;\n    margin: 0;\n}\n\nh1 {\n    color: white;\n}\n\nbutton {\n    padding: 15px 30px;\n    font-size: 18px;\n    background: #ff6b6b;\n    color: white;\n    border: none;\n    border-radius: 8px;\n    cursor: pointer;\n    transition: transform 0.2s;\n}\n\nbutton:hover {\n    transform: scale(1.05);\n}\n\n#message {\n    color: white;\n    font-size: 20px;\n    margin-top: 20px;\n}",
+          "editable": false
+        },
+        "script.js": {
+          "content": "// 获取按钮和消息元素\nconst button = document.getElementById('myButton');\nconst message = document.getElementById('message');\n\n// 添加点击事件\nbutton.addEventListener('click', function() {\n    message.textContent = '你好！你刚刚点击了按钮 🎉';\n    \n    // 尝试添加：改变背景颜色\n    // document.body.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';\n});\n\n// 练习：尝试添加更多交互\n// 比如：双击按钮时显示不同的消息",
+          "editable": true
+        }
+      },
+      "explanation": "## JavaScript 交互\n\nJavaScript 让网页动起来！\n\n### 核心概念\n\n1. `document.getElementById()` - 获取页面元素\n2. `addEventListener()` - 监听用户操作（点击、输入等）\n3. `textContent` - 修改元素文本\n\n### 练习任务\n\n1. 取消注释第 9 行的代码，看看点击按钮时背景如何变化\n2. 尝试添加双击事件 (`dblclick`)\n3. 修改显示的消息内容",
+      "hint": "取消注释 `document.body.style.background` 这一行，然后点击运行代码"
+    },
+    {
+      "id": "step-4",
+      "title": "综合练习",
+      "mode": "practice",
+      "files": {
+        "index.html": {
+          "content": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>综合练习 - 待办事项</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n    <div class=\"container\">\n        <h1>我的待办事项</h1>\n        <div class=\"input-group\">\n            <input type=\"text\" id=\"todoInput\" placeholder=\"输入新任务...\">\n            <button id=\"addBtn\">添加</button>\n        </div>\n        <ul id=\"todoList\"></ul>\n    </div>\n    <script src=\"script.js\"></script>\n</body>\n</html>",
+          "editable": false
+        },
+        "style.css": {
+          "content": "* {\n    margin: 0;\n    padding: 0;\n    box-sizing: border-box;\n}\n\nbody {\n    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n    background: #f5f5f5;\n    padding: 20px;\n}\n\n.container {\n    max-width: 500px;\n    margin: 0 auto;\n    background: white;\n    padding: 30px;\n    border-radius: 10px;\n    box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n}\n\nh1 {\n    color: #333;\n    margin-bottom: 20px;\n    text-align: center;\n}\n\n.input-group {\n    display: flex;\n    gap: 10px;\n    margin-bottom: 20px;\n}\n\ninput {\n    flex: 1;\n    padding: 12px;\n    border: 2px solid #ddd;\n    border-radius: 6px;\n    font-size: 16px;\n}\n\ninput:focus {\n    outline: none;\n    border-color: #667eea;\n}\n\nbutton {\n    padding: 12px 24px;\n    background: #667eea;\n    color: white;\n    border: none;\n    border-radius: 6px;\n    cursor: pointer;\n    font-size: 16px;\n}\n\nbutton:hover {\n    background: #5a67d8;\n}\n\nul {\n    list-style: none;\n}\n\nli {\n    padding: 15px;\n    background: #f8f9fa;\n    margin-bottom: 10px;\n    border-radius: 6px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n}\n\nli:hover {\n    background: #e9ecef;\n}\n\n.delete-btn {\n    background: #ff6b6b;\n    padding: 6px 12px;\n    font-size: 14px;\n}\n\n.delete-btn:hover {\n    background: #ee5a5a;\n}",
+          "editable": false
+        },
+        "script.js": {
+          "content": "// 获取元素\nconst todoInput = document.getElementById('todoInput');\nconst addBtn = document.getElementById('addBtn');\nconst todoList = document.getElementById('todoList');\n\n// 添加任务函数\nfunction addTodo() {\n    const text = todoInput.value.trim();\n    if (text === '') return;\n    \n    // 创建列表项\n    const li = document.createElement('li');\n    li.innerHTML = `\n        <span>${text}</span>\n        <button class=\"delete-btn\" onclick=\"deleteTodo(this)\">删除</button>\n    `;\n    \n    todoList.appendChild(li);\n    todoInput.value = '';\n}\n\n// 删除任务函数\nfunction deleteTodo(btn) {\n    btn.parentElement.remove();\n}\n\n// 绑定事件\naddBtn.addEventListener('click', addTodo);\n\n// 按回车键也可以添加\ntodoInput.addEventListener('keypress', function(e) {\n    if (e.key === 'Enter') {\n        addTodo();\n    }\n});\n\n// 练习：尝试添加以下功能\n// 1. 点击任务可以标记为完成（添加删除线）\n// 2. 显示任务总数\n// 3. 添加清空所有任务按钮",
+          "editable": true
+        }
+      },
+      "explanation": "## 综合练习：待办事项应用\n\n这是一个完整的待办事项应用，结合了 HTML、CSS 和 JavaScript！\n\n### 已实现功能\n\n1. ✅ 添加新任务\n2. ✅ 删除任务\n3. ✅ 回车键快速添加\n4. ✅ 美观的界面样式\n\n### 挑战任务\n\n尝试实现以下功能：\n\n1. **标记完成**：点击任务文本时，添加删除线样式\n   - 提示：使用 `text-decoration: line-through`\n   - 使用 `classList.toggle()` 切换样式\n\n2. **显示计数**：在标题下方显示\"共 X 个任务\"\n   - 提示：`todoList.children.length`\n\n3. **清空全部**：添加一个\"清空全部\"按钮\n   - 提示：`todoList.innerHTML = ''`",
+      "hint": "在 addTodo 函数中，给 li 添加点击事件：li.addEventListener('click', function() { this.classList.toggle('completed'); })"
+    }
+  ]
+}

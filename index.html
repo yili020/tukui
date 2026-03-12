@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeLearn - 小白学编程</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* 首页专用样式 */
+        .home-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--spacing-xl);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+        
+        .hero-logo {
+            font-size: 64px;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            max-width: 600px;
+        }
+        
+        .hero-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .hero-actions .btn {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+        
+        .features {
+            padding: var(--spacing-xl);
+            background: var(--bg-secondary);
+        }
+        
+        .features-title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: var(--spacing-xl);
+            color: var(--text-primary);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            transition: transform var(--transition-fast);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+        
+        .feature-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .courses-section {
+            padding: var(--spacing-xl);
+        }
+        
+        .courses-title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: var(--spacing-xl);
+            color: var(--text-primary);
+        }
+        
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .course-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .course-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        
+        .course-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .course-icon {
+            font-size: 32px;
+        }
+        
+        .course-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .course-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+            line-height: 1.5;
+        }
+        
+        .course-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .course-tag {
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .footer-home {
+            padding: var(--spacing-lg);
+            text-align: center;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* 响应式 */
+        @media screen and (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .hero-subtitle {
+                font-size: 16px;
+            }
+            
+            .hero-actions .btn {
+                padding: 14px 24px;
+                font-size: 14px;
+            }
+            
+            .features-grid,
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="home-page">
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="hero-logo">💻</div>
+        <h1 class="hero-title">CodeLearn</h1>
+        <p class="hero-subtitle">
+            专为编程小白设计的交互式学习平台。<br>
+            边学边练，即时预览，让编程学习更简单、更有趣！
+        </p>
+        <div class="hero-actions">
+            <a href="learning.html?course=html-basics" class="btn btn-primary">
+                <span>🚀</span>
+                开始学习
+            </a>
+            <a href="#courses" class="btn btn-secondary">
+                <span>📚</span>
+                浏览课程
+            </a>
+        </div>
+    </section>
+    
+    <!-- 特性介绍 -->
+    <section class="features">
+        <h2 class="features-title">为什么选择 CodeLearn？</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👁️</div>
+                <h3 class="feature-title">即时预览</h3>
+                <p class="feature-desc">
+                    左侧编写代码，右侧实时预览效果，所见即所得，学习更直观
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">循序渐进</h3>
+                <p class="feature-desc">
+                    从基础到进阶，分步骤学习，每个概念都有详细的代码解释
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✏️</div>
+                <h3 class="feature-title">动手实践</h3>
+                <p class="feature-desc">
+                    学习模式和练习模式结合，看完就练，巩固知识更牢固
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💾</div>
+                <h3 class="feature-title">自动保存</h3>
+                <p class="feature-desc">
+                    代码自动保存到本地，随时继续学习，不用担心进度丢失
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 课程列表 -->
+    <section class="courses-section" id="courses">
+        <h2 class="courses-title">热门课程</h2>
+        <div class="courses-grid">
+            <a href="learning.html?course=html-basics" class="course-card">
+                <div class="course-header">
+                    <span class="course-icon">🌐</span>
+                    <span class="course-name">HTML 基础入门</span>
+                </div>
+                <p class="course-desc">
+                    学习 HTML 的基础知识，了解网页结构，创建你的第一个网页。适合零基础学员。
+                </p>
+                <div class="course-meta">
+                    <span class="course-tag">前端开发</span>
+                    <span>4 个步骤</span>
+                </div>
+            </a>
+            
+            <!-- 更多课程占位 -->
+            <div class="course-card" style="opacity: 0.6;">
+                <div class="course-header">
+                    <span class="course-icon">🎨</span>
+                    <span class="course-name">CSS 样式设计</span>
+                </div>
+                <p class="course-desc">
+                    学习 CSS 美化网页，掌握颜色、布局、动画等样式技巧。让网页更漂亮！
+                </p>
+                <div class="course-meta">
+                    <span class="course-tag">前端开发</span>
+                    <span>即将上线</span>
+                </div>
+            </div>
+            
+            <div class="course-card" style="opacity: 0.6;">
+                <div class="course-header">
+                    <span class="course-icon">⚡</span>
+                    <span class="course-name">JavaScript 编程</span>
+                </div>
+                <p class="course-desc">
+                    学习 JavaScript 让网页动起来，掌握变量、函数、事件等编程基础。
+                </p>
+                <div class="course-meta">
+                    <span class="course-tag">前端开发</span>
+                    <span>即将上线</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer class="footer-home">
+        <p>CodeLearn - 让编程学习更简单 © 2026</p>
+    </footer>
+</body>
+</html>

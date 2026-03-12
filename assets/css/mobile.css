@@ -1,0 +1,197 @@
+/* ========================================
+   CodeLearn - 移动端适配样式
+   ======================================== */
+
+@media screen and (max-width: 768px) {
+    /* 调整变量 */
+    :root {
+        --header-height: 50px;
+        --footer-height: 50px;
+    }
+    
+    /* 顶部导航栏 */
+    .header {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .back-btn span:last-child {
+        display: none;
+    }
+    
+    .course-title {
+        font-size: 14px;
+    }
+    
+    .step-info {
+        font-size: 12px;
+    }
+    
+    .header-center .progress-bar {
+        width: 120px;
+    }
+    
+    .mode-badge {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+    
+    /* 主内容区 - 改为上下布局 */
+    .main-content {
+        flex-direction: column;
+    }
+    
+    /* 预览区 - 可折叠 */
+    .preview-section {
+        flex: none;
+        height: 40%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .preview-section.collapsed {
+        height: 40px;
+    }
+    
+    .preview-section.collapsed .preview-container,
+    .preview-section.collapsed .preview-hint {
+        display: none;
+    }
+    
+    /* 编辑区 */
+    .editor-section {
+        flex: 1;
+    }
+    
+    .section-header h2 {
+        font-size: 13px;
+    }
+    
+    .editor-actions .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    /* 文件标签 */
+    .file-tab {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    /* 解释面板 */
+    .explanation-panel {
+        max-height: 150px;
+    }
+    
+    .explanation-content {
+        padding: var(--spacing-sm);
+        font-size: 13px;
+    }
+    
+    /* 底部导航 */
+    .footer {
+        padding: 0 var(--spacing-md);
+    }
+    
+    .nav-controls {
+        gap: var(--spacing-sm);
+    }
+    
+    .nav-controls .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .step-indicator {
+        font-size: 12px;
+        min-width: 50px;
+    }
+    
+    /* 侧边栏 */
+    .sidebar {
+        width: 280px;
+    }
+    
+    /* 模态框 */
+    .modal-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .modal-header h3 {
+        font-size: 16px;
+    }
+}
+
+/* 小屏幕手机 */
+@media screen and (max-width: 480px) {
+    /* 进一步调整 */
+    .header-center {
+        gap: 2px;
+    }
+    
+    .course-title {
+        font-size: 13px;
+    }
+    
+    .step-info {
+        font-size: 11px;
+    }
+    
+    .mode-badge {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+    
+    /* 底部按钮更小 */
+    .nav-controls .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .nav-controls .btn .icon {
+        display: none;
+    }
+    
+    /* 文件标签可以滚动 */
+    .file-tabs {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* 横屏模式 */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .main-content {
+        flex-direction: row;
+    }
+    
+    .preview-section {
+        height: auto;
+        flex: 1;
+        border-right: 1px solid var(--border-color);
+        border-bottom: none;
+    }
+    
+    .preview-section.collapsed {
+        height: auto;
+        width: 40px;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .btn:hover {
+        transform: none;
+    }
+    
+    .btn:active {
+        opacity: 0.8;
+    }
+    
+    /* 增大触摸区域 */
+    .file-tab {
+        min-height: 44px;
+    }
+    
+    .step-item {
+        min-height: 44px;
+    }
+}
