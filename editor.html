@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码动画编辑器</title>
+    <!-- CodeMirror 6 样式 + 主题 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/theme/material.css">
+    <style>
+        * { margin:0; padding:0; box-sizing: border-box; }
+        body {
+            background: #1e1e2f;
+            font-family: 'Segoe UI', system-ui;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .toolbar {
+            background: #2c2c3a;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            border-bottom: 1px solid #3e3e4e;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button.reset-btn {
+            background: #475569;
+        }
+        button:hover { opacity: 0.85; transform: scale(0.97);}
+        .editor-wrapper {
+            flex: 1;
+            overflow: auto;
+        }
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+            font-family: 'Fira Code', monospace;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/lib/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/xml/xml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/javascript/javascript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/css/css.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/addon/display/autorefresh.js"></script>
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+</head>
+<body>
+<div class="toolbar">
+    <button class="reset-btn" id="resetBtn">↺ 重置</button>
+    <button id="runBtn">▶ 运行</button>
+</div>
+<div class="editor-wrapper">
+    <textarea id="codeEditor"></textarea>
+</div>
+<script>
+    // 默认示例动画代码 (包含动态CSS/JS特效)
+    const DEFAULT_CODE = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at 10% 30%, #1e1e2f, #0a0a1a);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui;
+        }
+        .orb {
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, #ff0080, #ff8c00);
+            border-radius: 50%;
+            animation: pulse 1.4s infinite alternate, rotate 3s linear infinite;
+            box-shadow: 0 0 30px rgba(255,0,100,0.7);
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            100% { transform: scale(1.2); opacity: 1; background: #ff3c00; }
+        }
+        @keyframes rotate {
+            from { filter: hue-rotate(0deg); }
+            to { filter: hue-rotate(360deg); }
+        }
+        h2 {
+            position: absolute;
+            bottom: 20px;
+            color: white;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb"></div>
+    <h2>✨ 动态光晕动画 ✨</h2>
+</body>
+</html>`;
+    
+    // 初始化 CodeMirror (行号、自动刷新、高亮)
+    const textarea = document.getElementById('codeEditor');
+    let editor = CodeMirror.fromTextArea(textarea, {
+        lineNumbers: true,      // 显示行号
+        mode: "htmlmixed",
+        theme: "material",
+        lineWrapping: true,
+        autoRefresh: true,
+        extraKeys: {"Ctrl-Space": "autocomplete"},
+        indentUnit: 2,
+        tabSize: 2,
+        gutters: ["CodeMirror-linenumbers"]
+    });
+    editor.setValue(DEFAULT_CODE);
+    
+    // 重置功能：恢复示例代码
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        editor.setValue(DEFAULT_CODE);
+    });
+    
+    // 运行功能：将当前代码发送给小程序，并触发翻转
+    document.getElementById('runBtn').addEventListener('click', () => {
+        const code = editor.getValue();
+        if (typeof wx !== 'undefined' && wx.miniProgram) {
+            wx.miniProgram.postMessage({ data: { type: 'run', code: code } });
+        } else {
+            console.log("编辑器代码:", code);
+            alert("运行成功！请在微信小程序环境中查看完整效果");
+        }
+    });
+    
+    // 可选：加载时从 storage 获取上次代码 (保持状态)
+    if (typeof wx !== 'undefined' && wx.miniProgram) {
+        wx.miniProgram.getStorage({
+            key: 'user_code',
+            success: (res) => {
+                if (res.data && res.data.trim() !== '') {
+                    editor.setValue(res.data);
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
