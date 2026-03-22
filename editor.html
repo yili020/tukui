@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>代码动画编辑器</title>
-    <!-- CodeMirror 6 样式 + 主题 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/lib/codemirror.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/theme/material.css">
+    <!-- CodeMirror 5 样式 + 主题 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/material.min.css">
     <style>
         * { margin:0; padding:0; box-sizing: border-box; }
         body {
@@ -55,12 +55,11 @@
             font-family: 'Fira Code', monospace;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/lib/codemirror.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/xml/xml.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/javascript/javascript.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/css/css.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/mode/htmlmixed/htmlmixed.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@6.0.1/addon/display/autorefresh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 </head>
 <body>
@@ -119,18 +118,15 @@
 </body>
 </html>`;
     
-    // 初始化 CodeMirror (行号、自动刷新、高亮)
+    // 初始化 CodeMirror (行号、高亮)
     const textarea = document.getElementById('codeEditor');
     let editor = CodeMirror.fromTextArea(textarea, {
         lineNumbers: true,      // 显示行号
         mode: "htmlmixed",
         theme: "material",
         lineWrapping: true,
-        autoRefresh: true,
-        extraKeys: {"Ctrl-Space": "autocomplete"},
         indentUnit: 2,
-        tabSize: 2,
-        gutters: ["CodeMirror-linenumbers"]
+        tabSize: 2
     });
     editor.setValue(DEFAULT_CODE);
     
