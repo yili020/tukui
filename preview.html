@@ -115,10 +115,12 @@
         }
     }
     
-    // 监听返回按钮：发送消息给小程序切换回编辑页
+    // 监听返回按钮：调用 navigateBack 返回编辑页
     document.getElementById('backBtn').addEventListener('click', () => {
         if (typeof wx !== 'undefined' && wx.miniProgram) {
             wx.miniProgram.postMessage({ data: { type: 'back' } });
+            // 返回上一页（编辑器页）
+            wx.miniProgram.navigateBack();
         } else {
             console.log("返回编辑器");
             alert("返回编辑器");
