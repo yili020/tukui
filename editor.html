@@ -136,16 +136,26 @@
     });
     
     // 运行功能：保存代码到 storage，然后跳转到预览页
+    let isNavigating = false;  // 防止重复点击
     document.getElementById('runBtn').addEventListener('click', () => {
+        if (isNavigating) return;  // 已在跳转中，忽略
+        isNavigating = true;
+        
         const code = editor.getValue();
         if (typeof wx !== 'undefined' && wx.miniProgram) {
             // 先保存代码到小程序 storage
             wx.miniProgram.postMessage({ data: { type: 'run', code: code } });
-            // 跳转到预览页（这会触发 bindmessage）
-            wx.miniProgram.navigateTo({ url: '/pages/preview/preview' });
+            // 跳转到预览页
+            wx.miniProgram.navigateTo({
+                url: '/pages/preview/preview',
+                fail: function() {
+                    isNavigating = false;
+                }
+            });
         } else {
+            isNavigating = false;
             console.log("编辑器代码:", code);
-            alert("运行成功！请在微信小程序环境中查看完整效果");
+            alert("运行成功！请在微信小程序环境中查看完效果");
         }
     });
     
