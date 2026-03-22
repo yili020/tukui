@@ -136,21 +136,17 @@
     });
     
     // 运行功能：保存代码到 localStorage，然后跳转到预览页
-    let isNavigating = false;  // 防止重复点击
-    
-    // 页面显示时重置状态（从预览页返回时）
-    window.addEventListener('pageshow', function() {
-        isNavigating = false;
-    });
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-            isNavigating = false;
-        }
-    });
+    // 使用时间戳防重入（不依赖事件重置，更可靠）
+    let lastClickTime = 0;
     
     document.getElementById('runBtn').addEventListener('click', () => {
-        if (isNavigating) return;  // 已在跳转中，忽略
-        isNavigating = true;
+        const now = Date.now();
+        // 2秒内不允许重复点击
+        if (now - lastClickTime < 2000) {
+            console.log('点击过快，忽略');
+            return;
+        }
+        lastClickTime = now;
         
         const code = editor.getValue();
         // 保存代码到 localStorage（同域名下 preview.html 可以读取）
@@ -160,12 +156,9 @@
             // 跳转到预览页
             wx.miniProgram.navigateTo({
                 url: '/pages/preview/preview',
-                success: function() {
-                    // 跳转成功后延迟重置，以便返回时可以再次点击
-                    setTimeout(function() { isNavigating = false; }, 500);
-                },
-                fail: function() {
-                    isNavigating = false;
+                fail: function(err) {
+                    console.log('跳转失败:', err);
+                    lastClickTime = 0;  // 失败时重置
                 }
             });
         } else {
