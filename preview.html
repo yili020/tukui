@@ -106,6 +106,17 @@
     
     // 监听返回按钮：调用 navigateBack 返回编辑页
     let isNavigating = false;  // 防止重复点击
+    
+    // 页面显示时重置状态
+    window.addEventListener('pageshow', function() {
+        isNavigating = false;
+    });
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            isNavigating = false;
+        }
+    });
+    
     document.getElementById('backBtn').addEventListener('click', () => {
         if (isNavigating) return;  // 已在跳转中，忽略
         isNavigating = true;
@@ -114,13 +125,16 @@
             // 直接返回上一页
             wx.miniProgram.navigateBack({
                 delta: 1,
+                success: function() {
+                    setTimeout(function() { isNavigating = false; }, 500);
+                },
                 fail: function() {
                     isNavigating = false;
                 }
             });
         } else {
-            isNavigating = false;
-            alert("返回编辑器");
+            // 非小程序环境，跳转回编辑器
+            window.location.href = 'editor.html';
         }
     });
     
