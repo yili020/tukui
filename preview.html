@@ -91,27 +91,16 @@
         };
     }
     
-    // 从小程序获取最新代码
+    // 从 localStorage 获取代码并渲染
     function fetchCodeAndRender() {
         loadingTip.style.display = 'flex';
-        if (typeof wx !== 'undefined' && wx.miniProgram) {
-            wx.miniProgram.getStorage({
-                key: 'user_code',
-                success: (res) => {
-                    if (res.data) {
-                        renderCode(res.data);
-                    } else {
-                        // 降级默认演示
-                        renderCode(`<html><body style="background:#111; color:white; display:flex; justify-content:center; align-items:center; height:100vh;"><div>✨ 点击「运行」开始动画 ✨</div></body></html>`);
-                    }
-                },
-                fail: () => {
-                    renderCode(`<html><body>无法获取代码，请返回编辑页重新运行</body></html>`);
-                }
-            });
+        
+        // 从 localStorage 获取代码（同域名下 editor.html 保存的）
+        const code = localStorage.getItem('user_code');
+        if (code && code.trim() !== '') {
+            renderCode(code);
         } else {
-            // 模拟演示环境
-            renderCode(`<html><body style="background:#222; color:white; display:flex; justify-content:center; align-items:center; height:100vh;">请在微信小程序中打开预览</body></html>`);
+            renderCode(`<html><body style="background:#111; color:white; display:flex; justify-content:center; align-items:center; height:100vh;"><div>✨ 点击「运行」开始动画 ✨</div></body></html>`);
         }
     }
     
