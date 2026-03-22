@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>动画预览</title>
     <style>
         * {
@@ -11,7 +11,7 @@
             box-sizing: border-box;
         }
         body {
-            background: #0f0f1a;
+            background: #1a1a2e;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -19,49 +19,146 @@
             font-family: system-ui;
         }
         .preview-header {
-            background: rgba(30,30,46,0.9);
-            backdrop-filter: blur(10px);
-            padding: 12px 20px;
+            background: rgba(30,30,46,0.95);
+            padding: 10px 16px;
             display: flex;
             justify-content: flex-end;
-            border-bottom: 1px solid #2d2d44;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            border-bottom: 2px solid #f5a623;
+            position: relative;
+            z-index: 100;
         }
         .back-btn {
             background: #ff4757;
             border: none;
             color: white;
             font-weight: bold;
-            padding: 6px 20px;
+            padding: 6px 18px;
             border-radius: 40px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             transition: 0.2s;
         }
-        .back-btn:hover {
-            background: #e84118;
-            transform: scale(0.96);
+        .back-btn:active {
+            transform: scale(0.95);
         }
-        .iframe-container {
+        
+        /* 预览容器 */
+        .preview-wrapper {
             flex: 1;
-            background: #fff;
             position: relative;
+            overflow: hidden;
+            background: #0f0f1a;
         }
+        
+        /* iframe 容器 - 可缩放和移动 */
+        .iframe-container {
+            position: absolute;
+            width: 1920px;
+            height: 1080px;
+            background: #fff;
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+        }
+        
         iframe {
             width: 100%;
             height: 100%;
             border: none;
             background: white;
         }
+        
         .loading {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%,-50%);
             color: #aaa;
+            font-size: 16px;
+            z-index: 50;
+        }
+        
+        /* 缩放控制 - 左下角 */
+        .zoom-controls {
+            position: fixed;
+            left: 12px;
+            bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 200;
+        }
+        .zoom-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background: #2d2d3a;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+        }
+        .zoom-btn:active {
+            background: #3d3d4a;
+            transform: scale(0.95);
+        }
+        .zoom-btn.reset {
+            font-size: 12px;
+            padding: 0 8px;
+            width: auto;
+        }
+        .zoom-label {
+            background: rgba(45,45,58,0.9);
+            color: #aaa;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        /* 方向导航 - 右下角 */
+        .nav-controls {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            z-index: 200;
+        }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 36px);
+            grid-template-rows: repeat(3, 36px);
+            gap: 2px;
+        }
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            background: #2d2d3a;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+        }
+        .nav-btn:active {
+            background: #3d3d4a;
+            transform: scale(0.95);
+        }
+        .nav-btn.empty {
+            background: transparent;
+            cursor: default;
         }
     </style>
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
@@ -70,20 +167,119 @@
 <div class="preview-header">
     <button class="back-btn" id="backBtn">← 返回</button>
 </div>
-<div class="iframe-container">
-    <iframe id="previewFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+
+<div class="preview-wrapper" id="previewWrapper">
+    <div class="iframe-container" id="iframeContainer">
+        <iframe id="previewFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+    </div>
     <div class="loading" id="loadingTip">🎨 加载动画中...</div>
 </div>
+
+<!-- 缩放控制 -->
+<div class="zoom-controls">
+    <div class="zoom-buttons">
+        <button class="zoom-btn" id="zoomIn">+</button>
+        <button class="zoom-btn reset" id="zoomReset">100%</button>
+        <button class="zoom-btn" id="zoomOut">-</button>
+    </div>
+    <div class="zoom-label" id="zoomLabel">缩放: 100%</div>
+</div>
+
+<!-- 方向导航 -->
+<div class="nav-controls">
+    <div class="nav-grid">
+        <div class="nav-btn empty"></div>
+        <button class="nav-btn" id="navUp">↑</button>
+        <div class="nav-btn empty"></div>
+        <button class="nav-btn" id="navLeft">←</button>
+        <button class="nav-btn" id="navCenter">•</button>
+        <button class="nav-btn" id="navRight">→</button>
+        <div class="nav-btn empty"></div>
+        <button class="nav-btn" id="navDown">↓</button>
+        <div class="nav-btn empty"></div>
+    </div>
+</div>
+
 <script>
     const frame = document.getElementById('previewFrame');
     const loadingTip = document.getElementById('loadingTip');
+    const container = document.getElementById('iframeContainer');
+    const wrapper = document.getElementById('previewWrapper');
+    const zoomLabel = document.getElementById('zoomLabel');
+    const zoomResetBtn = document.getElementById('zoomReset');
+    
+    // 缩放和位置状态
+    let scale = 0.3;  // 初始缩放（适应手机屏幕）
+    let posX = 0;
+    let posY = 0;
+    const IFRAME_WIDTH = 1920;
+    const IFRAME_HEIGHT = 1080;
+    const MOVE_STEP = 100;  // 每次移动的像素
+    
+    // 更新 transform
+    function updateTransform() {
+        container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        const percent = Math.round(scale * 100);
+        zoomLabel.textContent = `缩放: ${percent}%`;
+        zoomResetBtn.textContent = `${percent}%`;
+    }
+    
+    // 初始化位置（居中显示）
+    function initPosition() {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const scaledWidth = IFRAME_WIDTH * scale;
+        const scaledHeight = IFRAME_HEIGHT * scale;
+        posX = (wrapperRect.width - scaledWidth) / 2;
+        posY = (wrapperRect.height - scaledHeight) / 2;
+        updateTransform();
+    }
+    
+    // 缩放功能
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        scale = Math.min(scale + 0.1, 2);
+        updateTransform();
+    });
+    
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        scale = Math.max(scale - 0.1, 0.1);
+        updateTransform();
+    });
+    
+    document.getElementById('zoomReset').addEventListener('click', () => {
+        scale = 1;
+        initPosition();
+    });
+    
+    // 方向导航
+    document.getElementById('navUp').addEventListener('click', () => {
+        posY += MOVE_STEP;
+        updateTransform();
+    });
+    
+    document.getElementById('navDown').addEventListener('click', () => {
+        posY -= MOVE_STEP;
+        updateTransform();
+    });
+    
+    document.getElementById('navLeft').addEventListener('click', () => {
+        posX += MOVE_STEP;
+        updateTransform();
+    });
+    
+    document.getElementById('navRight').addEventListener('click', () => {
+        posX -= MOVE_STEP;
+        updateTransform();
+    });
+    
+    document.getElementById('navCenter').addEventListener('click', () => {
+        initPosition();
+    });
     
     // 渲染用户代码到 iframe
     function renderCode(code) {
         if (!code || code.trim() === '') {
-            code = `<html><body style="background:#eee; display:flex; justify-content:center; align-items:center;"><h3>✨ 暂无代码，请在编辑器编写动画✨</h3></body></html>`;
+            code = `<html><body style="background:#eee; display:flex; justify-content:center; align-items:center; height:100vh;"><h3>✨ 暂无代码，请在编辑器编写动画✨</h3></body></html>`;
         }
-        // 安全渲染：使用 srcdoc
         frame.srcdoc = code;
         loadingTip.style.display = 'none';
         frame.onload = () => {
@@ -94,8 +290,6 @@
     // 从 localStorage 获取代码并渲染
     function fetchCodeAndRender() {
         loadingTip.style.display = 'flex';
-        
-        // 从 localStorage 获取代码（同域名下 editor.html 保存的）
         const code = localStorage.getItem('user_code');
         if (code && code.trim() !== '') {
             renderCode(code);
@@ -104,41 +298,35 @@
         }
     }
     
-    // 监听返回按钮：调用 navigateBack 返回编辑页
-    // 使用时间戳防重入（不依赖事件重置，更可靠）
+    // 返回按钮 - 使用时间戳防重入
     let lastClickTime = 0;
-    
     document.getElementById('backBtn').addEventListener('click', () => {
         const now = Date.now();
-        // 2秒内不允许重复点击
-        if (now - lastClickTime < 2000) {
-            console.log('点击过快，忽略');
-            return;
-        }
+        if (now - lastClickTime < 2000) return;
         lastClickTime = now;
         
         if (typeof wx !== 'undefined' && wx.miniProgram) {
-            // 直接返回上一页
             wx.miniProgram.navigateBack({
                 delta: 1,
                 fail: function(err) {
                     console.log('返回失败:', err);
-                    lastClickTime = 0;  // 失败时重置
+                    lastClickTime = 0;
                 }
             });
         } else {
-            // 非小程序环境，跳转回编辑器
             window.location.href = 'editor.html';
         }
     });
     
-    // 页面加载时渲染
+    // 页面加载时初始化
     fetchCodeAndRender();
+    setTimeout(initPosition, 100);
     
-    // 监听 storage 变化（当小程序切换时有可能再次进入，刷新时重新拉取）
-    window.addEventListener('focus', () => {
-        fetchCodeAndRender();
-    });
+    // 窗口大小变化时重新居中
+    window.addEventListener('resize', initPosition);
+    
+    // 监听 focus 事件刷新内容
+    window.addEventListener('focus', fetchCodeAndRender);
 </script>
 </body>
 </html>
