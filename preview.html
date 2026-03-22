@@ -105,31 +105,25 @@
     }
     
     // 监听返回按钮：调用 navigateBack 返回编辑页
-    let isNavigating = false;  // 防止重复点击
-    
-    // 页面显示时重置状态
-    window.addEventListener('pageshow', function() {
-        isNavigating = false;
-    });
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-            isNavigating = false;
-        }
-    });
+    // 使用时间戳防重入（不依赖事件重置，更可靠）
+    let lastClickTime = 0;
     
     document.getElementById('backBtn').addEventListener('click', () => {
-        if (isNavigating) return;  // 已在跳转中，忽略
-        isNavigating = true;
+        const now = Date.now();
+        // 2秒内不允许重复点击
+        if (now - lastClickTime < 2000) {
+            console.log('点击过快，忽略');
+            return;
+        }
+        lastClickTime = now;
         
         if (typeof wx !== 'undefined' && wx.miniProgram) {
             // 直接返回上一页
             wx.miniProgram.navigateBack({
                 delta: 1,
-                success: function() {
-                    setTimeout(function() { isNavigating = false; }, 500);
-                },
-                fail: function() {
-                    isNavigating = false;
+                fail: function(err) {
+                    console.log('返回失败:', err);
+                    lastClickTime = 0;  // 失败时重置
                 }
             });
         } else {
