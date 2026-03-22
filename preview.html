@@ -116,13 +116,21 @@
     }
     
     // 监听返回按钮：调用 navigateBack 返回编辑页
+    let isNavigating = false;  // 防止重复点击
     document.getElementById('backBtn').addEventListener('click', () => {
+        if (isNavigating) return;  // 已在跳转中，忽略
+        isNavigating = true;
+        
         if (typeof wx !== 'undefined' && wx.miniProgram) {
-            wx.miniProgram.postMessage({ data: { type: 'back' } });
-            // 返回上一页（编辑器页）
-            wx.miniProgram.navigateBack();
+            // 直接返回上一页
+            wx.miniProgram.navigateBack({
+                delta: 1,
+                fail: function() {
+                    isNavigating = false;
+                }
+            });
         } else {
-            console.log("返回编辑器");
+            isNavigating = false;
             alert("返回编辑器");
         }
     });
