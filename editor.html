@@ -137,6 +137,17 @@
     
     // 运行功能：保存代码到 localStorage，然后跳转到预览页
     let isNavigating = false;  // 防止重复点击
+    
+    // 页面显示时重置状态（从预览页返回时）
+    window.addEventListener('pageshow', function() {
+        isNavigating = false;
+    });
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            isNavigating = false;
+        }
+    });
+    
     document.getElementById('runBtn').addEventListener('click', () => {
         if (isNavigating) return;  // 已在跳转中，忽略
         isNavigating = true;
@@ -149,12 +160,15 @@
             // 跳转到预览页
             wx.miniProgram.navigateTo({
                 url: '/pages/preview/preview',
+                success: function() {
+                    // 跳转成功后延迟重置，以便返回时可以再次点击
+                    setTimeout(function() { isNavigating = false; }, 500);
+                },
                 fail: function() {
                     isNavigating = false;
                 }
             });
         } else {
-            isNavigating = false;
             // 非小程序环境，直接跳转到预览页
             window.location.href = 'preview.html';
         }
