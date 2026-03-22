@@ -139,11 +139,14 @@
         editor.setValue(DEFAULT_CODE);
     });
     
-    // 运行功能：将当前代码发送给小程序，并触发翻转
+    // 运行功能：保存代码到 storage，然后跳转到预览页
     document.getElementById('runBtn').addEventListener('click', () => {
         const code = editor.getValue();
         if (typeof wx !== 'undefined' && wx.miniProgram) {
+            // 先保存代码到小程序 storage
             wx.miniProgram.postMessage({ data: { type: 'run', code: code } });
+            // 跳转到预览页（这会触发 bindmessage）
+            wx.miniProgram.navigateTo({ url: '/pages/preview/preview' });
         } else {
             console.log("编辑器代码:", code);
             alert("运行成功！请在微信小程序环境中查看完整效果");
