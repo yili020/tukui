@@ -2,9 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>代码动画编辑器</title>
-    <!-- CodeMirror 5 样式 + 主题 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/material.min.css">
     <style>
@@ -16,22 +15,83 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            color: #fff;
         }
-        .toolbar {
+
+        /* 顶部文件标签栏 + 运行按钮 */
+        .tab-bar {
             background: #2c2c3a;
-            padding: 12px 20px;
+            padding: 8px 12px;
             display: flex;
-            justify-content: flex-end;
-            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
             border-bottom: 1px solid #3e3e4e;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            min-height: 48px;
+            flex-shrink: 0;
         }
-        button {
+        .tab-list {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 0;
+        }
+        .tab-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: #aaa;
+            background: #1e1e2f;
+            border: 1px solid #3e3e4e;
+            transition: 0.15s;
+        }
+        .tab-item.active {
+            color: #fff;
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .tab-item .tab-delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            color: #999;
+            transition: 0.15s;
+        }
+        .tab-item.active .tab-delete { color: rgba(255,255,255,0.7); }
+        .tab-item .tab-delete:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .tab-add {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            color: #aaa;
+            background: #1e1e2f;
+            border: 1px solid #3e3e4e;
+            transition: 0.15s;
+        }
+        .tab-add:hover { color: #fff; border-color: #888; }
+        .run-btn {
             background: #3b82f6;
             border: none;
             color: white;
             font-weight: bold;
-            padding: 8px 24px;
+            padding: 7px 20px;
             border-radius: 40px;
             font-size: 14px;
             cursor: pointer;
@@ -39,21 +99,165 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            flex-shrink: 0;
+            margin-left: 10px;
         }
-        button.reset-btn {
-            background: #475569;
-        }
-        button:hover { opacity: 0.85; transform: scale(0.97);}
+        .run-btn:hover { opacity: 0.85; }
+
+        /* 编辑器区域 */
         .editor-wrapper {
             flex: 1;
             overflow: auto;
+            min-height: 0;
         }
         .CodeMirror {
             height: 100%;
             font-size: 14px;
-            font-family: 'Fira Code', monospace;
+            font-family: 'Fira Code', Consolas, monospace;
         }
+
+        /* 固定底部区域 */
+        .bottom-fixed {
+            flex-shrink: 0;
+            border-top: 1px solid #3e3e4e;
+        }
+
+        /* 符号栏 */
+        .symbol-bar {
+            background: #2a2a3a;
+            display: flex;
+            overflow-x: auto;
+            padding: 6px 4px;
+            gap: 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .symbol-bar::-webkit-scrollbar { height: 0; display: none; }
+        .symbol-btn {
+            flex-shrink: 0;
+            min-width: 32px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #3e3e50;
+            border: none;
+            color: #ccc;
+            font-size: 14px;
+            font-family: 'Fira Code', Consolas, monospace;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 0 6px;
+            transition: 0.1s;
+        }
+        .symbol-btn:active { background: #5a5a6e; color: #fff; }
+
+        /* 底部按钮栏 */
+        .action-bar {
+            background: #1a1a28;
+            display: flex;
+            padding: 8px 8px;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            gap: 6px;
+        }
+        .action-btn {
+            flex: 1;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 10px 0;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .action-btn:active { opacity: 0.7; transform: scale(0.95); }
+        .action-btn.btn-clear   { background: #ef4444; }
+        .action-btn.btn-copy    { background: #3b82f6; }
+        .action-btn.btn-stash   { background: #8b5cf6; }
+        .action-btn.btn-history { background: #f59e0b; }
+        .action-btn.btn-reset   { background: #6b7280; }
+
+        /* 新建文件弹窗 */
+        .modal-mask {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-mask.show { display: flex; }
+        .modal-box {
+            background: #2c2c3a;
+            border-radius: 12px;
+            padding: 20px;
+            width: 280px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        .modal-box h3 { margin-bottom: 12px; font-size: 15px; }
+        .modal-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background: #1e1e2f;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        .modal-box input:focus { border-color: #3b82f6; }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            justify-content: flex-end;
+        }
+        .modal-actions button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .modal-actions .btn-cancel { background: #555; color: #fff; }
+        .modal-actions .btn-confirm { background: #3b82f6; color: #fff; }
+
+        /* 历史弹窗 */
+        .history-mask {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .history-mask.show { display: flex; }
+        .history-box {
+            background: #2c2c3a;
+            border-radius: 12px 12px 0 0;
+            padding: 16px;
+            width: 100%;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+        }
+        .history-box h3 { margin-bottom: 10px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .history-box .close-btn { cursor: pointer; font-size: 18px; color: #aaa; }
+        .history-item {
+            background: #1e1e2f;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .history-item:hover { background: #333; }
+        .history-item .h-time { font-size: 11px; color: #888; }
+        .history-item .h-preview { font-size: 12px; color: #aaa; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-empty { color: #666; text-align: center; padding: 20px; font-size: 13px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js"></script>
@@ -63,15 +267,71 @@
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 </head>
 <body>
-<div class="toolbar">
-    <button class="reset-btn" id="resetBtn">↺ 重置</button>
-    <button id="runBtn">▶ 运行</button>
+
+<!-- 顶部标签栏 -->
+<div class="tab-bar">
+    <div class="tab-list" id="tabList"></div>
+    <div class="tab-add" id="tabAdd" title="新建文件">+</div>
+    <button class="run-btn" id="runBtn">▶ 运行</button>
 </div>
+
+<!-- 编辑器 -->
 <div class="editor-wrapper">
     <textarea id="codeEditor"></textarea>
 </div>
+
+<!-- 固定底部 -->
+<div class="bottom-fixed">
+    <div class="symbol-bar" id="symbolBar"></div>
+    <div class="action-bar">
+        <button class="action-btn btn-clear" id="clearBtn">清空</button>
+        <button class="action-btn btn-copy" id="copyBtn">复制</button>
+        <button class="action-btn btn-stash" id="stashBtn">暂存</button>
+        <button class="action-btn btn-history" id="historyBtn">历史</button>
+        <button class="action-btn btn-reset" id="resetBtn">重置</button>
+    </div>
+</div>
+
+<!-- 新建文件弹窗 -->
+<div class="modal-mask" id="newFileModal">
+    <div class="modal-box">
+        <h3>新建文件</h3>
+        <input type="text" id="newFileName" placeholder="例如: style.css 或 app.js">
+        <div class="modal-actions">
+            <button class="btn-cancel" id="modalCancel">取消</button>
+            <button class="btn-confirm" id="modalConfirm">确定</button>
+        </div>
+    </div>
+</div>
+
+<!-- 历史记录弹窗 -->
+<div class="history-mask" id="historyModal">
+    <div class="history-box">
+        <h3>暂存历史 <span class="close-btn" id="historyClose">✕</span></h3>
+        <div id="historyList"></div>
+    </div>
+</div>
+
 <script>
-    // 默认示例动画代码 (包含动态CSS/JS特效)
+    // ========== 符号栏 ==========
+    const SYMBOLS = ['<','>','/',  '=','"',"'",'`','(',')' ,'{','}','[',']',':',';',',','.','#','$','@','&','|','+','-','*','%','^','==','===','!=','!==','?','_','\\'];
+    const symbolBar = document.getElementById('symbolBar');
+    SYMBOLS.forEach(s => {
+        const btn = document.createElement('div');
+        btn.className = 'symbol-btn';
+        btn.textContent = s;
+        btn.addEventListener('click', () => insertSymbol(s));
+        symbolBar.appendChild(btn);
+    });
+
+    function insertSymbol(s) {
+        const doc = editor.getDoc();
+        const cursor = doc.getCursor();
+        doc.replaceRange(s, cursor);
+        editor.focus();
+    }
+
+    // ========== 多文件标签管理 ==========
     const DEFAULT_CODE = `<!DOCTYPE html>
 <html>
 <head>
@@ -117,67 +377,265 @@
     <h2>✨ 动态光晕动画 ✨</h2>
 </body>
 </html>`;
-    
-    // 初始化 CodeMirror (行号、高亮)
+
+    // 文件列表: [{name, content}]
+    let files = [{ name: 'index.html', content: DEFAULT_CODE }];
+    let activeIndex = 0;
+
+    // 初始化 CodeMirror
     const textarea = document.getElementById('codeEditor');
     let editor = CodeMirror.fromTextArea(textarea, {
-        lineNumbers: true,      // 显示行号
-        mode: "htmlmixed",
-        theme: "material",
+        lineNumbers: true,
+        mode: 'htmlmixed',
+        theme: 'material',
         lineWrapping: true,
         indentUnit: 2,
         tabSize: 2
     });
     editor.setValue(DEFAULT_CODE);
-    
-    // 重置功能：恢复示例代码
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        editor.setValue(DEFAULT_CODE);
+
+    // 编辑器内容变化时同步到文件数据
+    editor.on('change', () => {
+        files[activeIndex].content = editor.getValue();
     });
-    
-    // 运行功能：保存代码到 localStorage，然后跳转到预览页
-    // 使用时间戳防重入（不依赖事件重置，更可靠）
-    let lastClickTime = 0;
-    
-    document.getElementById('runBtn').addEventListener('click', () => {
-        const now = Date.now();
-        // 2秒内不允许重复点击
-        if (now - lastClickTime < 2000) {
-            console.log('点击过快，忽略');
+
+    function getMode(name) {
+        const ext = name.split('.').pop().toLowerCase();
+        if (ext === 'html' || ext === 'htm') return 'htmlmixed';
+        if (ext === 'css') return 'css';
+        if (ext === 'js') return 'javascript';
+        if (ext === 'json') return 'javascript';
+        return 'htmlmixed';
+    }
+
+    function renderTabs() {
+        const tabList = document.getElementById('tabList');
+        tabList.innerHTML = '';
+        files.forEach((f, i) => {
+            const tab = document.createElement('div');
+            tab.className = 'tab-item' + (i === activeIndex ? ' active' : '');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = f.name;
+            nameSpan.addEventListener('click', () => switchTab(i));
+            tab.appendChild(nameSpan);
+
+            const del = document.createElement('span');
+            del.className = 'tab-delete';
+            del.innerHTML = '🗑';
+            del.addEventListener('click', (e) => { e.stopPropagation(); deleteFile(i); });
+            tab.appendChild(del);
+
+            tabList.appendChild(tab);
+        });
+    }
+
+    function switchTab(index) {
+        // 保存当前文件内容
+        files[activeIndex].content = editor.getValue();
+        activeIndex = index;
+        editor.setValue(files[index].content);
+        editor.setOption('mode', getMode(files[index].name));
+        renderTabs();
+        editor.focus();
+    }
+
+    function deleteFile(index) {
+        if (files.length <= 1) { alert('至少保留一个文件'); return; }
+        files.splice(index, 1);
+        if (activeIndex >= files.length) activeIndex = files.length - 1;
+        else if (index < activeIndex) activeIndex--;
+        else if (index === activeIndex) { activeIndex = Math.min(activeIndex, files.length - 1); }
+        editor.setValue(files[activeIndex].content);
+        editor.setOption('mode', getMode(files[activeIndex].name));
+        renderTabs();
+    }
+
+    renderTabs();
+
+    // ========== 新建文件弹窗 ==========
+    const newFileModal = document.getElementById('newFileModal');
+    const newFileInput = document.getElementById('newFileName');
+    document.getElementById('tabAdd').addEventListener('click', () => {
+        newFileInput.value = '';
+        newFileModal.classList.add('show');
+        setTimeout(() => newFileInput.focus(), 100);
+    });
+    document.getElementById('modalCancel').addEventListener('click', () => {
+        newFileModal.classList.remove('show');
+    });
+    document.getElementById('modalConfirm').addEventListener('click', () => {
+        let name = newFileInput.value.trim();
+        if (!name) { alert('请输入文件名'); return; }
+        if (!/\.\w+$/.test(name)) name += '.html';
+        if (files.some(f => f.name === name)) { alert('文件名已存在'); return; }
+        // 保存当前文件
+        files[activeIndex].content = editor.getValue();
+        files.push({ name, content: '' });
+        activeIndex = files.length - 1;
+        editor.setValue('');
+        editor.setOption('mode', getMode(name));
+        renderTabs();
+        newFileModal.classList.remove('show');
+        editor.focus();
+    });
+    newFileModal.addEventListener('click', (e) => {
+        if (e.target === newFileModal) newFileModal.classList.remove('show');
+    });
+
+    // ========== 底部按钮功能 ==========
+
+    // 清空：清空当前文件内容
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        if (confirm('确定清空当前文件内容？')) {
+            editor.setValue('');
+        }
+    });
+
+    // 复制：复制当前文件内容到剪贴板
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        const code = editor.getValue();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(code).then(() => showToast('已复制')).catch(() => fallbackCopy(code));
+        } else {
+            fallbackCopy(code);
+        }
+    });
+    function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制');
+    }
+
+    // 暂存：保存当前所有文件到 localStorage 带时间戳
+    document.getElementById('stashBtn').addEventListener('click', () => {
+        files[activeIndex].content = editor.getValue();
+        const stashList = JSON.parse(localStorage.getItem('stash_list') || '[]');
+        stashList.unshift({
+            time: new Date().toLocaleString(),
+            files: JSON.parse(JSON.stringify(files)),
+            activeIndex
+        });
+        // 最多保留20条
+        if (stashList.length > 20) stashList.length = 20;
+        localStorage.setItem('stash_list', JSON.stringify(stashList));
+        showToast('已暂存');
+    });
+
+    // 历史：显示暂存历史列表
+    const historyModal = document.getElementById('historyModal');
+    document.getElementById('historyBtn').addEventListener('click', () => {
+        renderHistory();
+        historyModal.classList.add('show');
+    });
+    document.getElementById('historyClose').addEventListener('click', () => {
+        historyModal.classList.remove('show');
+    });
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) historyModal.classList.remove('show');
+    });
+
+    function renderHistory() {
+        const list = JSON.parse(localStorage.getItem('stash_list') || '[]');
+        const container = document.getElementById('historyList');
+        if (!list.length) {
+            container.innerHTML = '<div class="history-empty">暂无暂存记录</div>';
             return;
         }
-        lastClickTime = now;
-        
-        const code = editor.getValue();
-        // 保存代码到 localStorage（同域名下 preview.html 可以读取）
-        localStorage.setItem('user_code', code);
-        
-        if (typeof wx !== 'undefined' && wx.miniProgram) {
-            // 跳转到预览页
-            wx.miniProgram.navigateTo({
-                url: '/pages/preview/preview',
-                fail: function(err) {
-                    console.log('跳转失败:', err);
-                    lastClickTime = 0;  // 失败时重置
+        container.innerHTML = list.map((item, i) => {
+            const fileNames = item.files.map(f => f.name).join(', ');
+            const preview = item.files[0] ? item.files[0].content.substring(0, 60) : '';
+            return `<div class="history-item" data-index="${i}">
+                <div class="h-time">${item.time} · ${fileNames}</div>
+                <div class="h-preview">${preview.replace(/</g,'&lt;')}...</div>
+            </div>`;
+        }).join('');
+        container.querySelectorAll('.history-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.dataset.index);
+                const item = list[idx];
+                if (confirm('确定恢复此暂存记录？将覆盖当前内容。')) {
+                    files = JSON.parse(JSON.stringify(item.files));
+                    activeIndex = item.activeIndex || 0;
+                    if (activeIndex >= files.length) activeIndex = 0;
+                    editor.setValue(files[activeIndex].content);
+                    editor.setOption('mode', getMode(files[activeIndex].name));
+                    renderTabs();
+                    historyModal.classList.remove('show');
+                    showToast('已恢复');
                 }
             });
+        });
+    }
+
+    // 重置：恢复为默认示例
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (confirm('确定重置？将恢复为默认示例代码。')) {
+            files = [{ name: 'index.html', content: DEFAULT_CODE }];
+            activeIndex = 0;
+            editor.setValue(DEFAULT_CODE);
+            editor.setOption('mode', 'htmlmixed');
+            renderTabs();
+        }
+    });
+
+    // ========== Toast 提示 ==========
+    function showToast(msg) {
+        let t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:8px 24px;border-radius:20px;font-size:14px;z-index:999;pointer-events:none;transition:opacity 0.3s';
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 1200);
+    }
+
+    // ========== 运行功能 ==========
+    let lastClickTime = 0;
+    document.getElementById('runBtn').addEventListener('click', () => {
+        const now = Date.now();
+        if (now - lastClickTime < 2000) { console.log('点击过快，忽略'); return; }
+        lastClickTime = now;
+
+        files[activeIndex].content = editor.getValue();
+        // 保存所有文件数据
+        localStorage.setItem('user_code', files[0].content);
+        localStorage.setItem('user_files', JSON.stringify(files));
+
+        if (typeof wx !== 'undefined' && wx.miniProgram) {
+            wx.miniProgram.navigateTo({
+                url: '/pages/preview/preview',
+                fail: function(err) { console.log('跳转失败:', err); lastClickTime = 0; }
+            });
         } else {
-            // 非小程序环境，直接跳转到预览页
             window.location.href = 'preview.html';
         }
     });
-    
-    // 可选：加载时从 storage 获取上次代码 (保持状态)
-    if (typeof wx !== 'undefined' && wx.miniProgram) {
-        wx.miniProgram.getStorage({
-            key: 'user_code',
-            success: (res) => {
-                if (res.data && res.data.trim() !== '') {
-                    editor.setValue(res.data);
+
+    // ========== 加载上次数据 ==========
+    (function loadSaved() {
+        try {
+            const savedFiles = localStorage.getItem('user_files');
+            if (savedFiles) {
+                const parsed = JSON.parse(savedFiles);
+                if (Array.isArray(parsed) && parsed.length) {
+                    files = parsed;
+                    activeIndex = 0;
+                    editor.setValue(files[0].content);
+                    editor.setOption('mode', getMode(files[0].name));
+                    renderTabs();
+                    return;
                 }
             }
-        });
-    }
+            const savedCode = localStorage.getItem('user_code');
+            if (savedCode && savedCode.trim()) {
+                files[0].content = savedCode;
+                editor.setValue(savedCode);
+            }
+        } catch(e) {}
+    })();
 </script>
 </body>
 </html>
