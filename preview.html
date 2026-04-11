@@ -329,23 +329,34 @@
     // 监听 focus 事件刷新内容
     window.addEventListener('focus', fetchCodeAndRender);
 
-    // ========== 双指手势：缩放/平移 ==========
+    // ========== 双指手势：缩放/平移（仅iframe容器内） ==========
     let gestureMode = null;   // null | 'zoom' | 'pan'
     let pinchStartDist = 0;
     let pinchStartScale = scale;
     let lastCenterX = 0;
     let lastCenterY = 0;
 
-    function touchDist(t1, t2) {
-        const dx = t1.clientX - t2.clientX;
-        const dy = t1.clientY - t2.clientY;
+    // 统一转换为屏幕坐标（消除iframe坐标系反馈抖动）
+    function toScreenPt(touch, isIframe) {
+        if (isIframe) {
+            return {
+                clientX: posX + touch.clientX * scale,
+                clientY: posY + touch.clientY * scale
+            };
+        }
+        return touch;
+    }
+
+    function ptDist(a, b) {
+        var dx = a.clientX - b.clientX;
+        var dy = a.clientY - b.clientY;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    function touchCenter(t1, t2) {
+    function ptCenter(a, b) {
         return {
-            x: (t1.clientX + t2.clientX) / 2,
-            y: (t1.clientY + t2.clientY) / 2
+            x: (a.clientX + b.clientX) / 2,
+            y: (a.clientY + b.clientY) / 2
         };
     }
 
@@ -354,9 +365,11 @@
             if (e.touches.length >= 2) {
                 e.preventDefault();
                 gestureMode = null;
-                pinchStartDist = touchDist(e.touches[0], e.touches[1]);
+                var t0 = toScreenPt(e.touches[0], isIframe);
+                var t1 = toScreenPt(e.touches[1], isIframe);
+                pinchStartDist = ptDist(t0, t1);
                 pinchStartScale = scale;
-                var c = touchCenter(e.touches[0], e.touches[1]);
+                var c = ptCenter(t0, t1);
                 lastCenterX = c.x;
                 lastCenterY = c.y;
                 container.style.transition = 'none';
@@ -367,13 +380,15 @@
             if (e.touches.length < 2) return;
             e.preventDefault();
 
-            var dist = touchDist(e.touches[0], e.touches[1]);
-            var c = touchCenter(e.touches[0], e.touches[1]);
+            var t0 = toScreenPt(e.touches[0], isIframe);
+            var t1 = toScreenPt(e.touches[1], isIframe);
+            var dist = ptDist(t0, t1);
+            var c = ptCenter(t0, t1);
 
             // 首次移动时判断手势类型
             if (gestureMode === null) {
                 var dd = Math.abs(dist - pinchStartDist);
-                var dp = Math.sqrt(Math.pow(c.x - lastCenterX, 2) + Math.pow(c.y - lastCenterY, 2));
+                var dp = Math.sqrt((c.x - lastCenterX) * (c.x - lastCenterX) + (c.y - lastCenterY) * (c.y - lastCenterY));
                 if (dd > 8 || dp > 8) {
                     gestureMode = dd >= dp ? 'zoom' : 'pan';
                 }
@@ -384,11 +399,8 @@
                 scale = Math.max(0.1, Math.min(2, scale));
                 updateTransform();
             } else if (gestureMode === 'pan') {
-                var dx = c.x - lastCenterX;
-                var dy = c.y - lastCenterY;
-                var f = isIframe ? scale : 1;
-                posX += dx * f;
-                posY += dy * f;
+                posX += c.x - lastCenterX;
+                posY += c.y - lastCenterY;
                 updateTransform();
             }
 
@@ -409,10 +421,10 @@
         }, { passive: false });
     }
 
-    // 父文档手势
+    // 父文档手势（iframe容器外区域）
     setupTouchGestures(document, false);
 
-    // iframe 加载后绑定手势
+    // iframe 加载后绑定手势（iframe容器内区域）
     frame.addEventListener('load', function() {
         try {
             if (frame.contentDocument) {
