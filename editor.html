@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>代码动画编辑器</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/material.min.css">
@@ -33,10 +33,12 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            flex-wrap: wrap;
             flex: 1;
             min-width: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
+        .tab-list::-webkit-scrollbar { height: 0; display: none; }
         .tab-item {
             display: inline-flex;
             align-items: center;
@@ -251,12 +253,25 @@
             border-radius: 8px;
             padding: 10px 12px;
             margin-bottom: 8px;
-            cursor: pointer;
             transition: 0.15s;
         }
-        .history-item:hover { background: #333; }
         .history-item .h-time { font-size: 11px; color: #888; }
         .history-item .h-preview { font-size: 12px; color: #aaa; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .h-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .history-item .h-btn {
+            flex: 1;
+            padding: 6px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #fff;
+            transition: 0.15s;
+        }
+        .history-item .h-btn:active { opacity: 0.7; transform: scale(0.95); }
+        .history-item .h-btn.h-insert { background: #3b82f6; }
+        .history-item .h-btn.h-delete { background: #ef4444; }
         .history-empty { color: #666; text-align: center; padding: 20px; font-size: 13px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
@@ -552,21 +567,37 @@
             return `<div class="history-item" data-index="${i}">
                 <div class="h-time">${item.time} · ${fileNames}</div>
                 <div class="h-preview">${preview.replace(/</g,'&lt;')}...</div>
+                <div class="h-actions">
+                    <button class="h-btn h-insert" data-action="insert">插入</button>
+                    <button class="h-btn h-delete" data-action="delete">删除</button>
+                </div>
             </div>`;
         }).join('');
-        container.querySelectorAll('.history-item').forEach(el => {
-            el.addEventListener('click', () => {
-                const idx = parseInt(el.dataset.index);
-                const item = list[idx];
-                if (confirm('确定恢复此暂存记录？将覆盖当前内容。')) {
-                    files = JSON.parse(JSON.stringify(item.files));
-                    activeIndex = item.activeIndex || 0;
-                    if (activeIndex >= files.length) activeIndex = 0;
-                    editor.setValue(files[activeIndex].content);
-                    editor.setOption('mode', getMode(files[activeIndex].name));
-                    renderTabs();
-                    historyModal.classList.remove('show');
-                    showToast('已恢复');
+        container.querySelectorAll('.h-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.closest('.history-item').dataset.index);
+                const action = btn.dataset.action;
+                const stashList = JSON.parse(localStorage.getItem('stash_list') || '[]');
+                if (action === 'insert') {
+                    const item = stashList[idx];
+                    if (confirm('确定恢复此暂存记录？将覆盖当前内容。')) {
+                        files = JSON.parse(JSON.stringify(item.files));
+                        activeIndex = item.activeIndex || 0;
+                        if (activeIndex >= files.length) activeIndex = 0;
+                        editor.setValue(files[activeIndex].content);
+                        editor.setOption('mode', getMode(files[activeIndex].name));
+                        renderTabs();
+                        historyModal.classList.remove('show');
+                        showToast('已恢复');
+                    }
+                } else if (action === 'delete') {
+                    if (confirm('确定删除此条暂存记录？')) {
+                        stashList.splice(idx, 1);
+                        localStorage.setItem('stash_list', JSON.stringify(stashList));
+                        renderHistory();
+                        showToast('已删除');
+                    }
                 }
             });
         });
