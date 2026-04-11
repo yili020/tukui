@@ -78,6 +78,18 @@
             z-index: 50;
         }
         
+        /* 透明触摸层 - 覆盖在 iframe 上方捕获手势 */
+        .touch-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            background: transparent;
+            touch-action: none;
+        }
+        
         /* 缩放控制 - 左下角 */
         .zoom-controls {
             position: fixed;
@@ -172,6 +184,8 @@
     <div class="iframe-container" id="iframeContainer">
         <iframe id="previewFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
     </div>
+    <!-- 透明触摸层：捕获手指拖动事件 -->
+    <div class="touch-layer" id="touchLayer"></div>
     <div class="loading" id="loadingTip">🎨 加载动画中...</div>
 </div>
 
@@ -327,6 +341,35 @@
     
     // 监听 focus 事件刷新内容
     window.addEventListener('focus', fetchCodeAndRender);
+    
+    // ==================== 手指拖动支持 ====================
+    const touchLayer = document.getElementById('touchLayer');
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartPosX = 0;
+    let dragStartPosY = 0;
+    
+    touchLayer.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        var t = e.touches[0];
+        dragStartX = t.clientX;
+        dragStartY = t.clientY;
+        dragStartPosX = posX;
+        dragStartPosY = posY;
+        container.style.transition = 'none';
+    });
+    
+    touchLayer.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        var t = e.touches[0];
+        posX = dragStartPosX + (t.clientX - dragStartX);
+        posY = dragStartPosY + (t.clientY - dragStartY);
+        updateTransform();
+    });
+    
+    touchLayer.addEventListener('touchend', function() {
+        container.style.transition = 'transform 0.1s ease-out';
+    });
 </script>
 </body>
 </html>
