@@ -160,6 +160,57 @@
             background: transparent;
             cursor: default;
         }
+        
+        /* 拖动覆盖层 - 移动模式时覆盖在 iframe 上方 */
+        .drag-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;  /* 默认不拦截，iframe 正常交互 */
+            cursor: default;
+        }
+        .drag-overlay.active {
+            pointer-events: auto;  /* 移动模式：拦截触摸用于拖动 */
+            cursor: grab;
+            background: rgba(0,150,255,0.05);
+        }
+        .drag-overlay.active:active {
+            cursor: grabbing;
+        }
+        
+        /* 模式切换按钮 */
+        .mode-toggle {
+            position: fixed;
+            left: 12px;
+            bottom: 120px;
+            z-index: 200;
+        }
+        .mode-btn {
+            width: auto;
+            height: 36px;
+            padding: 0 12px;
+            background: #2d2d3a;
+            border: 2px solid transparent;
+            color: white;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .mode-btn:active {
+            transform: scale(0.95);
+        }
+        .mode-btn.move-active {
+            background: #1a5276;
+            border-color: #3498db;
+        }
     </style>
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 </head>
@@ -171,8 +222,14 @@
 <div class="preview-wrapper" id="previewWrapper">
     <div class="iframe-container" id="iframeContainer">
         <iframe id="previewFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+        <div class="drag-overlay" id="dragOverlay"></div>
     </div>
     <div class="loading" id="loadingTip">🎨 加载动画中...</div>
+</div>
+
+<!-- 模式切换 -->
+<div class="mode-toggle">
+    <button class="mode-btn" id="modeToggle">✋ 移动</button>
 </div>
 
 <!-- 缩放控制 -->
@@ -322,16 +379,65 @@
     fetchCodeAndRender();
     setTimeout(initPosition, 100);
     
-    // 拖动移动功能（仅在wrapper背景区域生效，不影响iframe内部交互）
+    // 拖动移动功能
+    const dragOverlay = document.getElementById('dragOverlay');
+    const modeToggle = document.getElementById('modeToggle');
+    let moveMode = false;
     let isDragging = false;
     let dragStartX = 0;
     let dragStartY = 0;
     let dragStartPosX = 0;
     let dragStartPosY = 0;
 
+    // 切换移动/交互模式
+    modeToggle.addEventListener('click', () => {
+        moveMode = !moveMode;
+        if (moveMode) {
+            dragOverlay.classList.add('active');
+            modeToggle.classList.add('move-active');
+            modeToggle.textContent = '✋ 移动中';
+        } else {
+            dragOverlay.classList.remove('active');
+            modeToggle.classList.remove('move-active');
+            modeToggle.textContent = '👆 交互';
+            isDragging = false;
+        }
+    });
+
+    // 覆盖层拖动（移动模式时 iframe 区域内拖动）
+    dragOverlay.addEventListener('pointerdown', (e) => {
+        if (!moveMode) return;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        dragStartPosX = posX;
+        dragStartPosY = posY;
+        dragOverlay.setPointerCapture(e.pointerId);
+        container.style.transition = 'none';
+        e.preventDefault();
+    });
+
+    dragOverlay.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        posX = dragStartPosX + (e.clientX - dragStartX);
+        posY = dragStartPosY + (e.clientY - dragStartY);
+        updateTransform();
+    });
+
+    dragOverlay.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.style.transition = 'transform 0.1s ease-out';
+    });
+
+    dragOverlay.addEventListener('pointercancel', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.style.transition = 'transform 0.1s ease-out';
+    });
+
+    // wrapper 背景区域拖动（任何模式下都可用）
     wrapper.addEventListener('pointerdown', (e) => {
-        // 只在点击 wrapper 深色背景时启动拖动
-        // iframe 内部事件由 iframe 自身捕获，不会到达这里
         if (e.target !== wrapper) return;
         isDragging = true;
         dragStartX = e.clientX;
