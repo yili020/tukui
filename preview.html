@@ -49,6 +49,7 @@
             position: relative;
             overflow: hidden;
             background: #0f0f1a;
+            touch-action: none;  /* 禁止浏览器默认触摸行为 */
         }
         
         /* iframe 容器 - 可缩放和移动 */
@@ -58,7 +59,7 @@
             height: 1080px;
             background: #fff;
             transform-origin: 0 0;
-            transition: transform 0.1s ease-out;
+            will-change: transform;
         }
         
         iframe {
@@ -176,6 +177,7 @@
             pointer-events: auto;  /* 移动模式：拦截触摸用于拖动 */
             cursor: grab;
             background: rgba(0,150,255,0.05);
+            touch-action: none;  /* 禁止浏览器默认触摸行为 */
         }
         .drag-overlay.active:active {
             cursor: grabbing;
@@ -388,6 +390,7 @@
     let dragStartY = 0;
     let dragStartPosX = 0;
     let dragStartPosY = 0;
+    let rafId = 0;
 
     // 切换移动/交互模式
     modeToggle.addEventListener('click', () => {
@@ -404,69 +407,52 @@
         }
     });
 
-    // 覆盖层拖动（移动模式时 iframe 区域内拖动）
-    dragOverlay.addEventListener('pointerdown', (e) => {
-        if (!moveMode) return;
+    // 通用拖动处理
+    function onDragStart(e) {
         isDragging = true;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
         dragStartPosX = posX;
         dragStartPosY = posY;
-        dragOverlay.setPointerCapture(e.pointerId);
-        container.style.transition = 'none';
         e.preventDefault();
-    });
+    }
 
-    dragOverlay.addEventListener('pointermove', (e) => {
+    function onDragMove(e) {
         if (!isDragging) return;
-        posX = dragStartPosX + (e.clientX - dragStartX);
-        posY = dragStartPosY + (e.clientY - dragStartY);
-        updateTransform();
-    });
+        const newX = dragStartPosX + (e.clientX - dragStartX);
+        const newY = dragStartPosY + (e.clientY - dragStartY);
+        if (newX !== posX || newY !== posY) {
+            posX = newX;
+            posY = newY;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(updateTransform);
+        }
+    }
 
-    dragOverlay.addEventListener('pointerup', (e) => {
+    function onDragEnd() {
         if (!isDragging) return;
         isDragging = false;
-        container.style.transition = 'transform 0.1s ease-out';
-    });
+    }
 
-    dragOverlay.addEventListener('pointercancel', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        container.style.transition = 'transform 0.1s ease-out';
+    // 覆盖层拖动（移动模式时 iframe 区域内拖动）
+    dragOverlay.addEventListener('pointerdown', (e) => {
+        if (!moveMode) return;
+        dragOverlay.setPointerCapture(e.pointerId);
+        onDragStart(e);
     });
+    dragOverlay.addEventListener('pointermove', onDragMove);
+    dragOverlay.addEventListener('pointerup', onDragEnd);
+    dragOverlay.addEventListener('pointercancel', onDragEnd);
 
     // wrapper 背景区域拖动（任何模式下都可用）
     wrapper.addEventListener('pointerdown', (e) => {
         if (e.target !== wrapper) return;
-        isDragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        dragStartPosX = posX;
-        dragStartPosY = posY;
         wrapper.setPointerCapture(e.pointerId);
-        container.style.transition = 'none';
-        e.preventDefault();
+        onDragStart(e);
     });
-
-    wrapper.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        posX = dragStartPosX + (e.clientX - dragStartX);
-        posY = dragStartPosY + (e.clientY - dragStartY);
-        updateTransform();
-    });
-
-    wrapper.addEventListener('pointerup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        container.style.transition = 'transform 0.1s ease-out';
-    });
-
-    wrapper.addEventListener('pointercancel', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        container.style.transition = 'transform 0.1s ease-out';
-    });
+    wrapper.addEventListener('pointermove', onDragMove);
+    wrapper.addEventListener('pointerup', onDragEnd);
+    wrapper.addEventListener('pointercancel', onDragEnd);
 
     // 窗口大小变化时重新居中
     window.addEventListener('resize', initPosition);
