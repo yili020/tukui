@@ -277,6 +277,8 @@
     
     // --- 触摸手势支持 ---
     
+    const ZOOM_THRESHOLD = 0.03; // 双指距离变化超过3%才触发缩放，避免平移时抖动
+    
     function _touchDist(t1, t2) {
         const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
         return Math.sqrt(dx * dx + dy * dy);
@@ -307,22 +309,23 @@
                     const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                     const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                     
-                    // 缩放
                     const factor = newDist / lastDist;
-                    const newScale = Math.max(0.1, Math.min(2, scale * factor));
                     
-                    // 以双指中心为锚点缩放：将 iframe 内坐标转换到屏幕坐标
-                    const screenCX = posX + cx * scale;
-                    const screenCY = posY + cy * scale;
-                    posX = screenCX - cx * newScale;
-                    posY = screenCY - cy * newScale;
-                    scale = newScale;
+                    // 仅当缩放幅度超过阈值时才执行缩放，否则只平移
+                    if (Math.abs(factor - 1) > ZOOM_THRESHOLD) {
+                        const newScale = Math.max(0.1, Math.min(2, scale * factor));
+                        // 以双指中心为锚点缩放
+                        const screenCX = posX + cx * scale;
+                        const screenCY = posY + cy * scale;
+                        posX = screenCX - cx * newScale;
+                        posY = screenCY - cy * newScale;
+                        scale = newScale;
+                        lastDist = newDist;
+                    }
                     
                     // 双指平移（iframe坐标差 × 当前缩放 = 屏幕位移）
                     posX += (cx - lastCX) * scale;
                     posY += (cy - lastCY) * scale;
-                    
-                    lastDist = newDist;
                     lastCX = cx;
                     lastCY = cy;
                     updateTransform();
@@ -385,19 +388,21 @@
             if (pinching && e.touches.length >= 2) {
                 e.preventDefault();
                 const newDist = _touchDist(e.touches[0], e.touches[1]);
+                const factor = newDist / lastDist;
                 const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                const factor = newDist / lastDist;
-                const newScale = Math.max(0.1, Math.min(2, scale * factor));
-                const screenCX = posX + ((cx - posX) / scale) * scale;
-                const screenCY = posY + ((cy - posY) / scale) * scale;
+                // 双指平移
                 posX += (cx - lastCX);
                 posY += (cy - lastCY);
-                // 以屏幕双指中心为锚点缩放
-                posX = cx - (cx - posX) * (newScale / scale);
-                posY = cy - (cy - posY) * (newScale / scale);
-                scale = newScale;
-                lastDist = newDist; lastCX = cx; lastCY = cy;
+                // 仅当缩放幅度超过阈值时才执行缩放
+                if (Math.abs(factor - 1) > ZOOM_THRESHOLD) {
+                    const newScale = Math.max(0.1, Math.min(2, scale * factor));
+                    posX = cx - (cx - posX) * (newScale / scale);
+                    posY = cy - (cy - posY) * (newScale / scale);
+                    scale = newScale;
+                    lastDist = newDist;
+                }
+                lastCX = cx; lastCY = cy;
                 updateTransform();
             }
         }, { passive: false });
