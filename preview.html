@@ -58,7 +58,7 @@
             height: 1080px;
             background: #fff;
             transform-origin: 0 0;
-            transition: transform 0.1s ease-out;
+            will-change: transform;
         }
         
         iframe {
@@ -326,31 +326,37 @@
     (function setupDrag() {
         let dragging = false;
         let startX, startY, startPosX, startPosY;
+        let rafId = null;
 
         wrapper.addEventListener('pointerdown', function(e) {
-            // 仅在点击深色背景区域时启用拖动（不捕获iframe内部事件）
             if (e.target !== wrapper) return;
             dragging = true;
             startX = e.clientX;
             startY = e.clientY;
             startPosX = posX;
             startPosY = posY;
-            container.style.transition = 'none';
             wrapper.setPointerCapture(e.pointerId);
             e.preventDefault();
         });
 
         wrapper.addEventListener('pointermove', function(e) {
             if (!dragging) return;
-            posX = startPosX + (e.clientX - startX);
-            posY = startPosY + (e.clientY - startY);
-            updateTransform();
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            posX = startPosX + dx;
+            posY = startPosY + dy;
+            if (rafId) return;
+            rafId = requestAnimationFrame(function() {
+                container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+                rafId = null;
+            });
         });
 
         function endDrag() {
             if (!dragging) return;
             dragging = false;
-            container.style.transition = 'transform 0.1s ease-out';
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            updateTransform();
         }
 
         wrapper.addEventListener('pointerup', endDrag);
