@@ -282,10 +282,9 @@
         }
         frame.srcdoc = code;
         loadingTip.style.display = 'none';
-        frame.addEventListener('load', function onFrameLoad() {
+        frame.onload = () => {
             loadingTip.style.display = 'none';
-            frame.removeEventListener('load', onFrameLoad);
-        });
+        };
     }
     
     // 从 localStorage 获取代码并渲染
@@ -323,107 +322,46 @@
     fetchCodeAndRender();
     setTimeout(initPosition, 100);
     
+    // 手指/鼠标拖动移动画面
+    (function setupDrag() {
+        let dragging = false;
+        let startX, startY, startPosX, startPosY;
+
+        wrapper.addEventListener('pointerdown', function(e) {
+            // 仅在点击深色背景区域时启用拖动（不捕获iframe内部事件）
+            if (e.target !== wrapper) return;
+            dragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startPosX = posX;
+            startPosY = posY;
+            container.style.transition = 'none';
+            wrapper.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
+
+        wrapper.addEventListener('pointermove', function(e) {
+            if (!dragging) return;
+            posX = startPosX + (e.clientX - startX);
+            posY = startPosY + (e.clientY - startY);
+            updateTransform();
+        });
+
+        function endDrag() {
+            if (!dragging) return;
+            dragging = false;
+            container.style.transition = 'transform 0.1s ease-out';
+        }
+
+        wrapper.addEventListener('pointerup', endDrag);
+        wrapper.addEventListener('pointercancel', endDrag);
+    })();
+
     // 窗口大小变化时重新居中
     window.addEventListener('resize', initPosition);
     
     // 监听 focus 事件刷新内容
     window.addEventListener('focus', fetchCodeAndRender);
-
-    // ========== 双指手势：缩放+平移同时进行 ==========
-    // 每个触摸源(父文档/iframe)独立状态，互不干扰
-    function createGestureState() {
-        return { active: false, startDist: 0, startScale: 0, lastCX: 0, lastCY: 0 };
-    }
-
-    // 统一转换为屏幕坐标（消除iframe坐标系反馈抖动）
-    function toScreenPt(touch, isIframe) {
-        if (isIframe) {
-            return {
-                clientX: posX + touch.clientX * scale,
-                clientY: posY + touch.clientY * scale
-            };
-        }
-        return touch;
-    }
-
-    function ptDist(a, b) {
-        var dx = a.clientX - b.clientX;
-        var dy = a.clientY - b.clientY;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    function ptCenter(a, b) {
-        return {
-            x: (a.clientX + b.clientX) / 2,
-            y: (a.clientY + b.clientY) / 2
-        };
-    }
-
-    function setupTouchGestures(doc, isIframe) {
-        var gs = createGestureState();
-
-        doc.addEventListener('touchstart', function(e) {
-            if (e.touches.length >= 2) {
-                e.preventDefault();
-                var t0 = toScreenPt(e.touches[0], isIframe);
-                var t1 = toScreenPt(e.touches[1], isIframe);
-                gs.startDist = ptDist(t0, t1);
-                gs.startScale = scale;
-                var c = ptCenter(t0, t1);
-                gs.lastCX = c.x;
-                gs.lastCY = c.y;
-                gs.active = true;
-                container.style.transition = 'none';
-            }
-        }, { passive: false });
-
-        doc.addEventListener('touchmove', function(e) {
-            if (e.touches.length < 2 || !gs.active) return;
-            e.preventDefault();
-
-            var t0 = toScreenPt(e.touches[0], isIframe);
-            var t1 = toScreenPt(e.touches[1], isIframe);
-            var dist = ptDist(t0, t1);
-            var c = ptCenter(t0, t1);
-
-            // 缩放
-            var newScale = gs.startScale * (dist / gs.startDist);
-            newScale = Math.max(0.1, Math.min(2, newScale));
-            scale = newScale;
-
-            // 平移
-            posX += c.x - gs.lastCX;
-            posY += c.y - gs.lastCY;
-
-            updateTransform();
-            gs.lastCX = c.x;
-            gs.lastCY = c.y;
-        }, { passive: false });
-
-        doc.addEventListener('touchend', function(e) {
-            if (e.touches.length < 2) {
-                gs.active = false;
-                container.style.transition = 'transform 0.1s ease-out';
-            }
-        }, { passive: false });
-
-        doc.addEventListener('touchcancel', function() {
-            gs.active = false;
-            container.style.transition = 'transform 0.1s ease-out';
-        }, { passive: false });
-    }
-
-    // 父文档手势（iframe容器外区域）
-    setupTouchGestures(document, false);
-
-    // iframe 加载后绑定手势（iframe容器内区域）
-    frame.addEventListener('load', function() {
-        try {
-            if (frame.contentDocument) {
-                setupTouchGestures(frame.contentDocument, true);
-            }
-        } catch(e) { /* 跨域时忽略 */ }
-    });
 </script>
 </body>
 </html>
