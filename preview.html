@@ -322,6 +322,46 @@
     fetchCodeAndRender();
     setTimeout(initPosition, 100);
     
+    // 拖动移动功能（仅在wrapper背景区域生效，不影响iframe内部交互）
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartPosX = 0;
+    let dragStartPosY = 0;
+
+    wrapper.addEventListener('pointerdown', (e) => {
+        // 只在点击 wrapper 深色背景时启动拖动
+        // iframe 内部事件由 iframe 自身捕获，不会到达这里
+        if (e.target !== wrapper) return;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        dragStartPosX = posX;
+        dragStartPosY = posY;
+        wrapper.setPointerCapture(e.pointerId);
+        container.style.transition = 'none';
+        e.preventDefault();
+    });
+
+    wrapper.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        posX = dragStartPosX + (e.clientX - dragStartX);
+        posY = dragStartPosY + (e.clientY - dragStartY);
+        updateTransform();
+    });
+
+    wrapper.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.style.transition = 'transform 0.1s ease-out';
+    });
+
+    wrapper.addEventListener('pointercancel', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.style.transition = 'transform 0.1s ease-out';
+    });
+
     // 窗口大小变化时重新居中
     window.addEventListener('resize', initPosition);
     
