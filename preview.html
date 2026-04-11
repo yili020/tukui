@@ -329,12 +329,11 @@
     // 监听 focus 事件刷新内容
     window.addEventListener('focus', fetchCodeAndRender);
 
-    // ========== 双指手势：缩放/平移（仅iframe容器内） ==========
-    let gestureMode = null;   // null | 'zoom' | 'pan'
-    let pinchStartDist = 0;
-    let pinchStartScale = scale;
-    let lastCenterX = 0;
-    let lastCenterY = 0;
+    // ========== 双指手势：缩放+平移同时进行 ==========
+    // 每个触摸源(父文档/iframe)独立状态，互不干扰
+    function createGestureState() {
+        return { active: false, startDist: 0, startScale: 0, lastCX: 0, lastCY: 0 };
+    }
 
     // 统一转换为屏幕坐标（消除iframe坐标系反馈抖动）
     function toScreenPt(touch, isIframe) {
@@ -361,23 +360,25 @@
     }
 
     function setupTouchGestures(doc, isIframe) {
+        var gs = createGestureState();
+
         doc.addEventListener('touchstart', function(e) {
             if (e.touches.length >= 2) {
                 e.preventDefault();
-                gestureMode = null;
                 var t0 = toScreenPt(e.touches[0], isIframe);
                 var t1 = toScreenPt(e.touches[1], isIframe);
-                pinchStartDist = ptDist(t0, t1);
-                pinchStartScale = scale;
+                gs.startDist = ptDist(t0, t1);
+                gs.startScale = scale;
                 var c = ptCenter(t0, t1);
-                lastCenterX = c.x;
-                lastCenterY = c.y;
+                gs.lastCX = c.x;
+                gs.lastCY = c.y;
+                gs.active = true;
                 container.style.transition = 'none';
             }
         }, { passive: false });
 
         doc.addEventListener('touchmove', function(e) {
-            if (e.touches.length < 2) return;
+            if (e.touches.length < 2 || !gs.active) return;
             e.preventDefault();
 
             var t0 = toScreenPt(e.touches[0], isIframe);
@@ -385,38 +386,29 @@
             var dist = ptDist(t0, t1);
             var c = ptCenter(t0, t1);
 
-            // 首次移动时判断手势类型
-            if (gestureMode === null) {
-                var dd = Math.abs(dist - pinchStartDist);
-                var dp = Math.sqrt((c.x - lastCenterX) * (c.x - lastCenterX) + (c.y - lastCenterY) * (c.y - lastCenterY));
-                if (dd > 8 || dp > 8) {
-                    gestureMode = dd >= dp ? 'zoom' : 'pan';
-                }
-            }
+            // 缩放
+            var newScale = gs.startScale * (dist / gs.startDist);
+            newScale = Math.max(0.1, Math.min(2, newScale));
+            scale = newScale;
 
-            if (gestureMode === 'zoom') {
-                scale = pinchStartScale * (dist / pinchStartDist);
-                scale = Math.max(0.1, Math.min(2, scale));
-                updateTransform();
-            } else if (gestureMode === 'pan') {
-                posX += c.x - lastCenterX;
-                posY += c.y - lastCenterY;
-                updateTransform();
-            }
+            // 平移
+            posX += c.x - gs.lastCX;
+            posY += c.y - gs.lastCY;
 
-            lastCenterX = c.x;
-            lastCenterY = c.y;
+            updateTransform();
+            gs.lastCX = c.x;
+            gs.lastCY = c.y;
         }, { passive: false });
 
         doc.addEventListener('touchend', function(e) {
             if (e.touches.length < 2) {
-                gestureMode = null;
+                gs.active = false;
                 container.style.transition = 'transform 0.1s ease-out';
             }
         }, { passive: false });
 
         doc.addEventListener('touchcancel', function() {
-            gestureMode = null;
+            gs.active = false;
             container.style.transition = 'transform 0.1s ease-out';
         }, { passive: false });
     }
