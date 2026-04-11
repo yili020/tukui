@@ -592,6 +592,58 @@
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 1200);
     }
 
+    // ========== 合并所有文件为可运行的HTML ==========
+    function mergeFiles() {
+        files[activeIndex].content = editor.getValue();
+
+        // 找主 HTML 文件（优先 index.html，否则第一个 .html）
+        let htmlFile = files.find(f => f.name === 'index.html')
+                    || files.find(f => /\.html?$/i.test(f.name));
+        let htmlContent = htmlFile ? htmlFile.content : '';
+
+        // 如果没有 HTML 文件，用其他文件拼一个基本页面
+        if (!htmlFile) {
+            const cssFiles = files.filter(f => /\.css$/i.test(f.name));
+            const jsFiles = files.filter(f => /\.js$/i.test(f.name));
+            htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n';
+            cssFiles.forEach(f => { htmlContent += '<style>\n' + f.content + '\n</style>\n'; });
+            htmlContent += '</head>\n<body>\n';
+            jsFiles.forEach(f => { htmlContent += '<script>\n' + f.content + '\n<\/script>\n'; });
+            htmlContent += '</body>\n</html>';
+            return htmlContent;
+        }
+
+        // 收集非主HTML的 CSS 和 JS 文件
+        const cssFiles = files.filter(f => /\.css$/i.test(f.name));
+        const jsFiles = files.filter(f => /\.js$/i.test(f.name));
+
+        // 注入 CSS：在 </head> 前插入 <style> 块
+        if (cssFiles.length > 0) {
+            const cssBlock = cssFiles.map(f => '<!-- ' + f.name + ' -->\n<style>\n' + f.content + '\n</style>').join('\n');
+            if (htmlContent.includes('</head>')) {
+                htmlContent = htmlContent.replace('</head>', cssBlock + '\n</head>');
+            } else if (htmlContent.includes('<body')) {
+                htmlContent = htmlContent.replace('<body', cssBlock + '\n<body');
+            } else {
+                htmlContent = cssBlock + '\n' + htmlContent;
+            }
+        }
+
+        // 注入 JS：在 </body> 前插入 <script> 块
+        if (jsFiles.length > 0) {
+            const jsBlock = jsFiles.map(f => '<!-- ' + f.name + ' -->\n<script>\n' + f.content + '\n<\/script>').join('\n');
+            if (htmlContent.includes('</body>')) {
+                htmlContent = htmlContent.replace('</body>', jsBlock + '\n</body>');
+            } else if (htmlContent.includes('</html>')) {
+                htmlContent = htmlContent.replace('</html>', jsBlock + '\n</html>');
+            } else {
+                htmlContent += '\n' + jsBlock;
+            }
+        }
+
+        return htmlContent;
+    }
+
     // ========== 运行功能 ==========
     let lastClickTime = 0;
     document.getElementById('runBtn').addEventListener('click', () => {
@@ -599,9 +651,9 @@
         if (now - lastClickTime < 2000) { console.log('点击过快，忽略'); return; }
         lastClickTime = now;
 
-        files[activeIndex].content = editor.getValue();
-        // 保存所有文件数据
-        localStorage.setItem('user_code', files[0].content);
+        // 合并所有文件为一个可运行的 HTML
+        const mergedCode = mergeFiles();
+        localStorage.setItem('user_code', mergedCode);
         localStorage.setItem('user_files', JSON.stringify(files));
 
         if (typeof wx !== 'undefined' && wx.miniProgram) {
