@@ -274,7 +274,7 @@
     document.getElementById('navCenter').addEventListener('click', () => {
         initPosition();
     });
-    
+
     // 渲染用户代码到 iframe
     function renderCode(code) {
         if (!code || code.trim() === '') {
@@ -282,9 +282,10 @@
         }
         frame.srcdoc = code;
         loadingTip.style.display = 'none';
-        frame.onload = () => {
+        frame.addEventListener('load', function onFrameLoad() {
             loadingTip.style.display = 'none';
-        };
+            frame.removeEventListener('load', onFrameLoad);
+        });
     }
     
     // 从 localStorage 获取代码并渲染
@@ -327,6 +328,98 @@
     
     // 监听 focus 事件刷新内容
     window.addEventListener('focus', fetchCodeAndRender);
+
+    // ========== 双指手势：缩放/平移 ==========
+    let gestureMode = null;   // null | 'zoom' | 'pan'
+    let pinchStartDist = 0;
+    let pinchStartScale = scale;
+    let lastCenterX = 0;
+    let lastCenterY = 0;
+
+    function touchDist(t1, t2) {
+        const dx = t1.clientX - t2.clientX;
+        const dy = t1.clientY - t2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function touchCenter(t1, t2) {
+        return {
+            x: (t1.clientX + t2.clientX) / 2,
+            y: (t1.clientY + t2.clientY) / 2
+        };
+    }
+
+    function setupTouchGestures(doc, isIframe) {
+        doc.addEventListener('touchstart', function(e) {
+            if (e.touches.length >= 2) {
+                e.preventDefault();
+                gestureMode = null;
+                pinchStartDist = touchDist(e.touches[0], e.touches[1]);
+                pinchStartScale = scale;
+                var c = touchCenter(e.touches[0], e.touches[1]);
+                lastCenterX = c.x;
+                lastCenterY = c.y;
+                container.style.transition = 'none';
+            }
+        }, { passive: false });
+
+        doc.addEventListener('touchmove', function(e) {
+            if (e.touches.length < 2) return;
+            e.preventDefault();
+
+            var dist = touchDist(e.touches[0], e.touches[1]);
+            var c = touchCenter(e.touches[0], e.touches[1]);
+
+            // 首次移动时判断手势类型
+            if (gestureMode === null) {
+                var dd = Math.abs(dist - pinchStartDist);
+                var dp = Math.sqrt(Math.pow(c.x - lastCenterX, 2) + Math.pow(c.y - lastCenterY, 2));
+                if (dd > 8 || dp > 8) {
+                    gestureMode = dd >= dp ? 'zoom' : 'pan';
+                }
+            }
+
+            if (gestureMode === 'zoom') {
+                scale = pinchStartScale * (dist / pinchStartDist);
+                scale = Math.max(0.1, Math.min(2, scale));
+                updateTransform();
+            } else if (gestureMode === 'pan') {
+                var dx = c.x - lastCenterX;
+                var dy = c.y - lastCenterY;
+                var f = isIframe ? scale : 1;
+                posX += dx * f;
+                posY += dy * f;
+                updateTransform();
+            }
+
+            lastCenterX = c.x;
+            lastCenterY = c.y;
+        }, { passive: false });
+
+        doc.addEventListener('touchend', function(e) {
+            if (e.touches.length < 2) {
+                gestureMode = null;
+                container.style.transition = 'transform 0.1s ease-out';
+            }
+        }, { passive: false });
+
+        doc.addEventListener('touchcancel', function() {
+            gestureMode = null;
+            container.style.transition = 'transform 0.1s ease-out';
+        }, { passive: false });
+    }
+
+    // 父文档手势
+    setupTouchGestures(document, false);
+
+    // iframe 加载后绑定手势
+    frame.addEventListener('load', function() {
+        try {
+            if (frame.contentDocument) {
+                setupTouchGestures(frame.contentDocument, true);
+            }
+        } catch(e) { /* 跨域时忽略 */ }
+    });
 </script>
 </body>
 </html>
