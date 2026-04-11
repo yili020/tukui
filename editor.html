@@ -62,19 +62,17 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            font-size: 11px;
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            font-size: 12px;
             line-height: 1;
             cursor: pointer;
-            color: #777;
-            background: rgba(255,255,255,0.08);
+            color: #999;
             transition: 0.15s;
-            margin-left: 2px;
         }
-        .tab-item.active .tab-delete { color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.15); }
-        .tab-item .tab-delete:hover { background: #ef4444; color: #fff; }
+        .tab-item.active .tab-delete { color: rgba(255,255,255,0.7); }
+        .tab-item .tab-delete:hover { background: rgba(255,255,255,0.15); color: #fff; }
         .tab-add {
             display: inline-flex;
             align-items: center;
@@ -431,15 +429,9 @@
         files.forEach((f, i) => {
             const tab = document.createElement('div');
             tab.className = 'tab-item' + (i === activeIndex ? ' active' : '');
-
             const nameSpan = document.createElement('span');
             nameSpan.textContent = f.name;
             nameSpan.addEventListener('click', () => switchTab(i));
-            // 双击重命名
-            nameSpan.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                startRename(i, nameSpan);
-            });
             tab.appendChild(nameSpan);
 
             const del = document.createElement('span');
@@ -449,40 +441,6 @@
             tab.appendChild(del);
 
             tabList.appendChild(tab);
-        });
-    }
-
-    function startRename(index, spanEl) {
-        const oldName = files[index].name;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = oldName;
-        input.style.cssText = 'width:80px;padding:1px 4px;border:1px solid #3b82f6;border-radius:4px;background:#1e1e2f;color:#fff;font-size:12px;outline:none;';
-        spanEl.replaceWith(input);
-        input.focus();
-        input.select();
-
-        function finishRename() {
-            let newName = input.value.trim();
-            if (!newName || newName === oldName) {
-                newName = oldName;
-            } else if (!/\.\w+$/.test(newName)) {
-                newName += '.' + oldName.split('.').pop();
-            }
-            if (newName !== oldName && files.some((f, j) => j !== index && f.name === newName)) {
-                alert('文件名已存在');
-                newName = oldName;
-            }
-            files[index].name = newName;
-            if (index === activeIndex) {
-                editor.setOption('mode', getMode(newName));
-            }
-            renderTabs();
-        }
-        input.addEventListener('blur', finishRename);
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { input.blur(); }
-            if (e.key === 'Escape') { input.value = oldName; input.blur(); }
         });
     }
 
