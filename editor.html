@@ -455,7 +455,18 @@
     }
 
     function deleteFile(index) {
-        if (files.length <= 1) { alert('至少保留一个文件'); return; }
+        if (files.length <= 1) {
+            // 只剩一个文件，提示确定和关闭网页
+            var r = confirm('这是最后一个文件，删除后将关闭网页。确定删除吗？');
+            if (r) {
+                // 尝试关闭网页
+                try { window.close(); } catch(e) {}
+                // 如果关闭失败，用空白页替代
+                try { window.location.href = 'about:blank'; } catch(e) {}
+            }
+            return;
+        }
+        // 大于1个文件，提示取消和确定
         if (!confirm('确定删除文件 "' + files[index].name + '" 吗？')) return;
         files.splice(index, 1);
         if (activeIndex >= files.length) activeIndex = files.length - 1;
