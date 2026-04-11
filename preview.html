@@ -49,7 +49,6 @@
             position: relative;
             overflow: hidden;
             background: #0f0f1a;
-            touch-action: none;  /* 禁止浏览器默认触摸行为 */
         }
         
         /* iframe 容器 - 可缩放和移动 */
@@ -59,7 +58,7 @@
             height: 1080px;
             background: #fff;
             transform-origin: 0 0;
-            will-change: transform;
+            transition: transform 0.1s ease-out;
         }
         
         iframe {
@@ -161,58 +160,6 @@
             background: transparent;
             cursor: default;
         }
-        
-        /* 拖动覆盖层 - 移动模式时覆盖在 iframe 上方 */
-        .drag-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;  /* 默认不拦截，iframe 正常交互 */
-            cursor: default;
-        }
-        .drag-overlay.active {
-            pointer-events: auto;  /* 移动模式：拦截触摸用于拖动 */
-            cursor: grab;
-            background: rgba(0,150,255,0.05);
-            touch-action: none;  /* 禁止浏览器默认触摸行为 */
-        }
-        .drag-overlay.active:active {
-            cursor: grabbing;
-        }
-        
-        /* 模式切换按钮 */
-        .mode-toggle {
-            position: fixed;
-            left: 12px;
-            bottom: 120px;
-            z-index: 200;
-        }
-        .mode-btn {
-            width: auto;
-            height: 36px;
-            padding: 0 12px;
-            background: #2d2d3a;
-            border: 2px solid transparent;
-            color: white;
-            font-size: 13px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.15s;
-            white-space: nowrap;
-        }
-        .mode-btn:active {
-            transform: scale(0.95);
-        }
-        .mode-btn.move-active {
-            background: #1a5276;
-            border-color: #3498db;
-        }
     </style>
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 </head>
@@ -224,14 +171,8 @@
 <div class="preview-wrapper" id="previewWrapper">
     <div class="iframe-container" id="iframeContainer">
         <iframe id="previewFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
-        <div class="drag-overlay" id="dragOverlay"></div>
     </div>
     <div class="loading" id="loadingTip">🎨 加载动画中...</div>
-</div>
-
-<!-- 模式切换 -->
-<div class="mode-toggle">
-    <button class="mode-btn" id="modeToggle">✋ 移动</button>
 </div>
 
 <!-- 缩放控制 -->
@@ -334,6 +275,140 @@
         initPosition();
     });
     
+    // --- 触摸手势支持 ---
+    
+    function _touchDist(t1, t2) {
+        const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    // 在 iframe 文档内注入双指手势（缩放+平移容器），单指操作不拦截
+    function attachIframeTouchListeners() {
+        try {
+            const iDoc = frame.contentDocument || frame.contentWindow.document;
+            if (!iDoc) return;
+            let pinching = false, lastDist = 0, lastCX = 0, lastCY = 0;
+            
+            iDoc.addEventListener('touchstart', function(e) {
+                if (e.touches.length >= 2) {
+                    e.preventDefault();
+                    pinching = true;
+                    lastDist = _touchDist(e.touches[0], e.touches[1]);
+                    lastCX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    lastCY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    container.style.transition = 'none';
+                }
+            }, { passive: false });
+            
+            iDoc.addEventListener('touchmove', function(e) {
+                if (pinching && e.touches.length >= 2) {
+                    e.preventDefault();
+                    const newDist = _touchDist(e.touches[0], e.touches[1]);
+                    const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    
+                    // 缩放
+                    const factor = newDist / lastDist;
+                    const newScale = Math.max(0.1, Math.min(2, scale * factor));
+                    
+                    // 以双指中心为锚点缩放：将 iframe 内坐标转换到屏幕坐标
+                    const screenCX = posX + cx * scale;
+                    const screenCY = posY + cy * scale;
+                    posX = screenCX - cx * newScale;
+                    posY = screenCY - cy * newScale;
+                    scale = newScale;
+                    
+                    // 双指平移（iframe坐标差 × 当前缩放 = 屏幕位移）
+                    posX += (cx - lastCX) * scale;
+                    posY += (cy - lastCY) * scale;
+                    
+                    lastDist = newDist;
+                    lastCX = cx;
+                    lastCY = cy;
+                    updateTransform();
+                }
+            }, { passive: false });
+            
+            iDoc.addEventListener('touchend', function(e) {
+                if (e.touches.length < 2) {
+                    pinching = false;
+                    container.style.transition = 'transform 0.1s ease-out';
+                }
+            });
+            iDoc.addEventListener('touchcancel', function() {
+                pinching = false;
+                container.style.transition = 'transform 0.1s ease-out';
+            });
+        } catch(err) {
+            console.log('无法访问iframe文档:', err);
+        }
+    }
+    
+    // 在 wrapper 背景区域单指拖动容器
+    (function() {
+        let dragging = false, sx = 0, sy = 0, spx = 0, spy = 0;
+        wrapper.addEventListener('pointerdown', function(e) {
+            if (e.target !== wrapper) return;
+            dragging = true; sx = e.clientX; sy = e.clientY;
+            spx = posX; spy = posY;
+            container.style.transition = 'none';
+            wrapper.setPointerCapture(e.pointerId);
+        });
+        wrapper.addEventListener('pointermove', function(e) {
+            if (!dragging) return;
+            posX = spx + (e.clientX - sx);
+            posY = spy + (e.clientY - sy);
+            updateTransform();
+        });
+        wrapper.addEventListener('pointerup', function() {
+            if (dragging) { dragging = false; container.style.transition = 'transform 0.1s ease-out'; }
+        });
+        wrapper.addEventListener('pointercancel', function() {
+            dragging = false; container.style.transition = 'transform 0.1s ease-out';
+        });
+    })();
+    
+    // 在 wrapper 上双指也可缩放（触摸背景区域时）
+    (function() {
+        let pinching = false, lastDist = 0, lastCX = 0, lastCY = 0;
+        wrapper.addEventListener('touchstart', function(e) {
+            if (e.touches.length >= 2) {
+                e.preventDefault();
+                pinching = true;
+                lastDist = _touchDist(e.touches[0], e.touches[1]);
+                lastCX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                lastCY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                container.style.transition = 'none';
+            }
+        }, { passive: false });
+        wrapper.addEventListener('touchmove', function(e) {
+            if (pinching && e.touches.length >= 2) {
+                e.preventDefault();
+                const newDist = _touchDist(e.touches[0], e.touches[1]);
+                const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                const factor = newDist / lastDist;
+                const newScale = Math.max(0.1, Math.min(2, scale * factor));
+                const screenCX = posX + ((cx - posX) / scale) * scale;
+                const screenCY = posY + ((cy - posY) / scale) * scale;
+                posX += (cx - lastCX);
+                posY += (cy - lastCY);
+                // 以屏幕双指中心为锚点缩放
+                posX = cx - (cx - posX) * (newScale / scale);
+                posY = cy - (cy - posY) * (newScale / scale);
+                scale = newScale;
+                lastDist = newDist; lastCX = cx; lastCY = cy;
+                updateTransform();
+            }
+        }, { passive: false });
+        wrapper.addEventListener('touchend', function(e) {
+            if (e.touches.length < 2) { pinching = false; container.style.transition = 'transform 0.1s ease-out'; }
+        });
+        wrapper.addEventListener('touchcancel', function() {
+            pinching = false; container.style.transition = 'transform 0.1s ease-out';
+        });
+    })();
+
     // 渲染用户代码到 iframe
     function renderCode(code) {
         if (!code || code.trim() === '') {
@@ -343,6 +418,7 @@
         loadingTip.style.display = 'none';
         frame.onload = () => {
             loadingTip.style.display = 'none';
+            attachIframeTouchListeners();
         };
     }
     
@@ -381,79 +457,6 @@
     fetchCodeAndRender();
     setTimeout(initPosition, 100);
     
-    // 拖动移动功能
-    const dragOverlay = document.getElementById('dragOverlay');
-    const modeToggle = document.getElementById('modeToggle');
-    let moveMode = false;
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let dragStartPosX = 0;
-    let dragStartPosY = 0;
-    let rafId = 0;
-
-    // 切换移动/交互模式
-    modeToggle.addEventListener('click', () => {
-        moveMode = !moveMode;
-        if (moveMode) {
-            dragOverlay.classList.add('active');
-            modeToggle.classList.add('move-active');
-            modeToggle.textContent = '✋ 移动中';
-        } else {
-            dragOverlay.classList.remove('active');
-            modeToggle.classList.remove('move-active');
-            modeToggle.textContent = '👆 交互';
-            isDragging = false;
-        }
-    });
-
-    // 通用拖动处理
-    function onDragStart(e) {
-        isDragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        dragStartPosX = posX;
-        dragStartPosY = posY;
-        e.preventDefault();
-    }
-
-    function onDragMove(e) {
-        if (!isDragging) return;
-        const newX = dragStartPosX + (e.clientX - dragStartX);
-        const newY = dragStartPosY + (e.clientY - dragStartY);
-        if (newX !== posX || newY !== posY) {
-            posX = newX;
-            posY = newY;
-            if (rafId) cancelAnimationFrame(rafId);
-            rafId = requestAnimationFrame(updateTransform);
-        }
-    }
-
-    function onDragEnd() {
-        if (!isDragging) return;
-        isDragging = false;
-    }
-
-    // 覆盖层拖动（移动模式时 iframe 区域内拖动）
-    dragOverlay.addEventListener('pointerdown', (e) => {
-        if (!moveMode) return;
-        dragOverlay.setPointerCapture(e.pointerId);
-        onDragStart(e);
-    });
-    dragOverlay.addEventListener('pointermove', onDragMove);
-    dragOverlay.addEventListener('pointerup', onDragEnd);
-    dragOverlay.addEventListener('pointercancel', onDragEnd);
-
-    // wrapper 背景区域拖动（任何模式下都可用）
-    wrapper.addEventListener('pointerdown', (e) => {
-        if (e.target !== wrapper) return;
-        wrapper.setPointerCapture(e.pointerId);
-        onDragStart(e);
-    });
-    wrapper.addEventListener('pointermove', onDragMove);
-    wrapper.addEventListener('pointerup', onDragEnd);
-    wrapper.addEventListener('pointercancel', onDragEnd);
-
     // 窗口大小变化时重新居中
     window.addEventListener('resize', initPosition);
     
